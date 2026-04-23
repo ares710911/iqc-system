@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>進料檢驗登錄系統</title>
+
+    <!-- 引入 PWA 相關設定，讓安裝至桌面的 App 功能復活 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+
+    <style>
+        /* 讓外框滿版且沒有白邊 */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            /* 防止出現雙重捲軸 */
+            background-color: #0f172a;
+            /* 配合您原本的深色背景 */
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 
+      【重要】
+      請將下方 src="..." 裡面的網址，替換成您剛剛在 Google Apps Script 
+      部署成功後取得的網址 (結尾是 /exec)。
+    -->
+    <iframe
+        src="https://script.google.com/macros/s/AKfycbx7TiIlEpmmkaFMryPmT3Kl-hDMWQ6nki2y2c_OtE5BTsetymhEWFBXR9Y1_UThdnOi/exec"
+        allow="camera; capture"></iframe>
+
+    <!-- 重新註冊 Service Worker 確保可以加入桌面並運作 -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker 註冊成功'))
+                    .catch(err => console.log('Service Worker 註冊失敗', err));
+            });
+        }
+    </script>
+</body>
+
+</html>
