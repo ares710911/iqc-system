@@ -1,4 +1,4 @@
-const CACHE_NAME = 'iqc-netlify-v7';
+const CACHE_NAME = 'iqc-netlify-v8';
 const urlsToCache = [
   './',
   './index.html',
@@ -8,6 +8,7 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
+  self.skipWaiting(); // 強制立即生效，不需等待所有分頁關閉
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -19,6 +20,21 @@ self.addEventListener('install', event => {
           })
         );
       })
+  );
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('[SW] 刪除舊快取:', cacheName);
+            return caches.delete(cacheName); // 刪除不符最新版本的舊快取
+          }
+        })
+      );
+    }).then(() => self.clients.claim()) // 立即接管目前的網頁
   );
 });
 
