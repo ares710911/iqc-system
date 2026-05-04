@@ -1,11 +1,11 @@
 :root {
     --primary-color: #2563eb;
     --primary-hover: #1d4ed8;
-    --bg-color: #f8fafc;
-    --card-bg: rgba(255, 255, 255, 0.95);
-    --text-main: #0f172a;
-    --text-muted: #475569;
-    --border-color: #cbd5e1;
+    --bg-color: #e2e8f0;
+    --card-bg: rgba(255, 255, 255, 0.85);
+    --text-main: #1e3a8a; /* 深藍色字體 */
+    --text-muted: #64748b;
+    --border-color: #94a3b8;
     --success: #059669;
     --danger: #dc2626;
     --radius: 16px;
@@ -23,7 +23,7 @@
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-color: var(--bg-color);
-    background-image: radial-gradient(circle at top left, #ffffff 0%, #e2e8f0 100%);
+    background-image: radial-gradient(circle at top left, #f8fafc 0%, #cbd5e1 100%);
     color: var(--text-main);
     line-height: 1.5;
     min-height: 100vh;
@@ -146,6 +146,19 @@ select {
     background-color: #ffffff;
     color: var(--text-main);
     transition: all 0.2s ease;
+}
+
+/* 連動產生的資訊 (唯讀欄位) 使用不同顏色 */
+input[readonly] {
+    background-color: #f5f3ff; /* 淡淡的紫色底 */
+    color: #6d28d9; /* 深紫色字體 */
+    font-weight: 600;
+    border-color: #c4b5fd;
+}
+input[readonly]:focus {
+    outline: none;
+    box-shadow: none;
+    border-color: #c4b5fd;
 }
 
 ::placeholder {
