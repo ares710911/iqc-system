@@ -55,6 +55,11 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="defectQty">數量</label>
+                        <input type="number" id="defectQty" name="defectQty" required min="1" placeholder="請輸入數量">
+                    </div>
+
+                    <div class="form-group">
                         <label for="productionOrder">生產製令</label>
                         <input type="text" id="productionOrder" name="productionOrder" required placeholder="請輸入生產製令">
                     </div>
@@ -66,13 +71,15 @@
                         </select>
                     </div>
 
-                    <div class="form-group">
-                        <label for="judgment">判定</label>
-                        <select id="judgment" name="judgment" required class="highlight-select">
-                            <option value="" disabled selected>請選擇判定</option>
-                            <option value="退至019倉">退至019倉</option>
-                            <option value="退至020倉">退至020倉</option>
-                        </select>
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="return019">退至019倉</label>
+                            <input type="number" id="return019" name="return019" min="0" placeholder="填寫數量">
+                        </div>
+                        <div class="form-group half">
+                            <label for="return020">退至020倉</label>
+                            <input type="number" id="return020" name="return020" min="0" placeholder="填寫數量">
+                        </div>
                     </div>
                 </section>
 
