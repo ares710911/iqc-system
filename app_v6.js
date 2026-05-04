@@ -90,6 +90,95 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // 頁籤切換邏輯
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // 移除所有 active
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.add('hidden'));
+
+            // 加上 active
+            btn.classList.add('active');
+            const targetId = btn.getAttribute('data-target');
+            document.getElementById(targetId).classList.remove('hidden');
+            
+            // 如果切換到查詢，預設填入今天日期
+            if (targetId === 'querySection') {
+                document.getElementById('queryDate').value = new Date().toISOString().split('T')[0];
+            }
+        });
+    });
+
+    // 查詢邏輯
+    const queryBtn = document.getElementById('queryBtn');
+    if (queryBtn) {
+        queryBtn.addEventListener('click', () => {
+            const dateVal = document.getElementById('queryDate').value;
+            if (!dateVal) {
+                showToast('請選擇查詢日期', 'error');
+                return;
+            }
+
+            const btnText = queryBtn.querySelector('.btn-text');
+            const spinner = queryBtn.querySelector('.spinner');
+            const resultsContainer = document.getElementById('queryResults');
+
+            queryBtn.disabled = true;
+            btnText.textContent = '查詢中...';
+            spinner.classList.remove('hidden');
+            resultsContainer.innerHTML = '<div class="empty-state">資料載入中...</div>';
+
+            fetch(`${SCRIPT_URL}?action=query&queryDate=${dateVal}`)
+                .then(res => res.json())
+                .then(data => {
+                    queryBtn.disabled = false;
+                    btnText.textContent = '開始查詢';
+                    spinner.classList.add('hidden');
+
+                    if (data.records && data.records.length > 0) {
+                        resultsContainer.innerHTML = '';
+                        data.records.forEach(record => {
+                            const card = document.createElement('div');
+                            card.className = 'query-card';
+                            card.innerHTML = `
+                                <div class="query-card-header">
+                                    <span class="query-po">${record.poNumber || '無編號'}</span>
+                                    <span class="query-vendor">${record.vendor || '無廠商資訊'}</span>
+                                </div>
+                                <div class="query-detail">
+                                    <span class="label">品號</span>
+                                    <span class="value">${record.partNumber || '-'}</span>
+                                </div>
+                                <div class="query-detail">
+                                    <span class="label">品名</span>
+                                    <span class="value">${record.partName || '-'}</span>
+                                </div>
+                                <div class="query-detail">
+                                    <span class="label">數量</span>
+                                    <span class="value">${record.receiptQty || '-'}</span>
+                                </div>
+                            `;
+                            resultsContainer.appendChild(card);
+                        });
+                        showToast(`查詢完成，共 ${data.records.length} 筆資料`);
+                    } else {
+                        resultsContainer.innerHTML = '<div class="empty-state">該日期無登錄資料</div>';
+                    }
+                })
+                .catch(err => {
+                    console.error('查詢失敗:', err);
+                    queryBtn.disabled = false;
+                    btnText.textContent = '開始查詢';
+                    spinner.classList.add('hidden');
+                    resultsContainer.innerHTML = '<div class="empty-state">查詢失敗，請檢查網路或稍後再試</div>';
+                    showToast('查詢失敗', 'error');
+                });
+        });
+    }
+
     // 註冊 Service Worker (PWA)
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')

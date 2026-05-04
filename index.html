@@ -16,9 +16,17 @@
             <p>Incoming Quality Control</p>
         </header>
 
+        <!-- 頁籤切換導覽列 -->
+        <div class="tabs">
+            <button class="tab-btn active" data-target="iqcForm">資料登錄</button>
+            <button class="tab-btn" data-target="querySection">資訊查詢</button>
+        </div>
+
         <main class="form-container">
             <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
-            <form id="iqcForm" action="https://script.google.com/macros/s/AKfycbxjoY2yX5BsyojlCUcv8VV8xRhA_ZQEIoMs7CySMDX14MDTpBGVOj9UurjzmbRZohHm/exec" method="POST" target="hidden_iframe">
+            
+            <!-- 原本的登錄表單區塊 -->
+            <form id="iqcForm" class="tab-content active" action="https://script.google.com/macros/s/AKfycbxjoY2yX5BsyojlCUcv8VV8xRhA_ZQEIoMs7CySMDX14MDTpBGVOj9UurjzmbRZohHm/exec" method="POST" target="hidden_iframe">
                 <!-- 隱藏欄位：用來放置壓縮後的 Base64 字串 -->
                 <input type="hidden" id="hiddenPoPhotoBase64" name="poPhotoBase64">
                 <input type="hidden" id="hiddenPhysicalPhotoBase64" name="physicalPhotoBase64">
@@ -177,6 +185,26 @@
                     </button>
                 </div>
             </form>
+
+            <!-- 資訊查詢區塊 -->
+            <section id="querySection" class="tab-content hidden">
+                <div class="form-section">
+                    <h2>依日期查詢</h2>
+                    <div class="form-group">
+                        <label for="queryDate">查詢日期</label>
+                        <input type="date" id="queryDate" required>
+                    </div>
+                    <button type="button" id="queryBtn" class="btn-primary" style="margin-top: 16px; position: relative; width: 100%;">
+                        <span class="btn-text">開始查詢</span>
+                        <div class="spinner hidden" id="querySpinner"></div>
+                    </button>
+                </div>
+                
+                <div id="queryResults" class="query-results">
+                    <!-- 查詢結果卡片將會動態插入這裡 -->
+                    <div class="empty-state">請選擇日期並點擊查詢</div>
+                </div>
+            </section>
         </main>
     </div>
 
