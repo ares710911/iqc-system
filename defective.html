@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>來料不良檢驗登錄系統</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>來料不良檢驗登錄系統</h1>
+            <p>Defective Material Inspection</p>
+            <a href="index.html" class="nav-switch-btn">切換至進料檢驗系統</a>
+        </header>
+
+        <!-- 頁籤切換導覽列 (只留資料登錄) -->
+        <div class="tabs">
+            <button class="tab-btn active" data-target="defectiveForm">不良登錄</button>
+        </div>
+
+        <main class="form-container">
+            <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+            
+            <form id="defectiveForm" class="tab-content active" action="https://script.google.com/macros/s/AKfycbxjoY2yX5BsyojlCUcv8VV8xRhA_ZQEIoMs7CySMDX14MDTpBGVOj9UurjzmbRZohHm/exec" method="POST" target="hidden_iframe">
+                <input type="hidden" name="systemType" value="defective">
+                <input type="hidden" id="hiddenDefectPhotoBase64" name="defectPhotoBase64">
+
+                <!-- 基本資訊區塊 -->
+                <section class="form-section">
+                    <h2>基本資訊</h2>
+                    <div class="form-group">
+                        <label for="uploadDate">上傳日期</label>
+                        <input type="date" id="uploadDate" name="uploadDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="personnel">人員</label>
+                        <select id="personnel" name="personnel" required>
+                            <option value="" disabled selected>資料載入中...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="partNumber">品號</label>
+                        <input type="text" id="partNumber" name="partNumber" required placeholder="請輸入或掃描品號">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="partName">品名</label>
+                        <input type="text" id="partName" name="partName" required placeholder="自動帶出品名" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productionOrder">生產製令</label>
+                        <input type="text" id="productionOrder" name="productionOrder" required placeholder="請輸入生產製令">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="defectReason">不良原因</label>
+                        <select id="defectReason" name="defectReason" required>
+                            <option value="" disabled selected>資料載入中...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="judgment">判定</label>
+                        <select id="judgment" name="judgment" required class="highlight-select">
+                            <option value="" disabled selected>請選擇判定</option>
+                            <option value="退至019倉">退至019倉</option>
+                            <option value="退至020倉">退至020倉</option>
+                        </select>
+                    </div>
+                </section>
+
+                <!-- 附件區塊 -->
+                <section class="form-section">
+                    <h2>附件上傳</h2>
+                    
+                    <div class="form-group file-upload-group">
+                        <label class="file-upload-label">
+                            <span class="upload-icon">📷</span>
+                            <span class="upload-text">點擊拍攝或上傳<br><b>不良照片</b></span>
+                            <input type="file" id="defectPhoto" name="defectPhoto" accept="image/*" capture="environment">
+                        </label>
+                        <div id="defectPhotoPreview" class="image-preview"></div>
+                    </div>
+                </section>
+
+                <div class="form-actions">
+                    <button type="submit" id="submitBtn" class="btn-primary">
+                        <span class="btn-text">送出不良紀錄</span>
+                        <div class="spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <!-- 狀態通知 -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="defective_app.js"></script>
+</body>
+</html>

@@ -1,9 +1,11 @@
-const CACHE_NAME = 'iqc-netlify-v10';
+const CACHE_NAME = 'iqc-netlify-v11';
 const urlsToCache = [
   './',
   './index.html',
+  './defective.html',
   './style.css',
   './app_v6.js',
+  './defective_app.js',
   './manifest.json'
 ];
 
