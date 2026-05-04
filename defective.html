@@ -17,9 +17,10 @@
             <a href="index.html" class="nav-switch-btn">切換至進料檢驗系統</a>
         </header>
 
-        <!-- 頁籤切換導覽列 (只留資料登錄) -->
+        <!-- 頁籤切換導覽列 -->
         <div class="tabs">
             <button class="tab-btn active" data-target="defectiveForm">不良登錄</button>
+            <button class="tab-btn" data-target="querySection">資訊查詢</button>
         </div>
 
         <main class="form-container">
@@ -65,6 +66,11 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="model">機型</label>
+                        <input type="text" id="model" name="model" required placeholder="自動帶出機型" readonly>
+                    </div>
+
+                    <div class="form-group">
                         <label for="defectReason">不良原因</label>
                         <select id="defectReason" name="defectReason" required>
                             <option value="" disabled selected>資料載入中...</option>
@@ -104,6 +110,26 @@
                     </button>
                 </div>
             </form>
+
+            <!-- 資訊查詢區塊 -->
+            <section id="querySection" class="tab-content hidden">
+                <div class="form-section">
+                    <h2>依日期查詢</h2>
+                    <div class="form-group">
+                        <label for="queryDate">查詢日期</label>
+                        <input type="date" id="queryDate" required>
+                    </div>
+                    <button type="button" id="queryBtn" class="btn-primary" style="margin-top: 16px; position: relative; width: 100%;">
+                        <span class="btn-text">開始查詢</span>
+                        <div class="spinner hidden" id="querySpinner"></div>
+                    </button>
+                </div>
+                
+                <div id="queryResults" class="query-results">
+                    <!-- 查詢結果卡片將會動態插入這裡 -->
+                    <div class="empty-state">請選擇日期並點擊查詢</div>
+                </div>
+            </section>
         </main>
     </div>
 
