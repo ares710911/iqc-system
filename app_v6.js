@@ -3,7 +3,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxjoY2yX5BsyojlCUcv8
 let globalPartsData = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-    alert("【系統通知】成功載入最新版 V6 系統！");
+    alert("【系統通知】成功載入最新版 V7 系統！");
     const dateInput = document.getElementById('uploadDate');
     const today = new Date().toISOString().split('T')[0];
     dateInput.value = today;
@@ -69,6 +69,24 @@ document.addEventListener('DOMContentLoaded', () => {
             // 找不到對應的品號
             partNameInput.value = '';
             vendorSelect.innerHTML = '<option value="" disabled selected>請先輸入品號</option>';
+        }
+    });
+
+    // 設定抽驗檢驗 A~F 點擊時清除預設的 "OK"
+    const sampleIds = ['sampleA', 'sampleB', 'sampleC', 'sampleD', 'sampleE', 'sampleF'];
+    sampleIds.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('focus', function() {
+                if (this.value === 'OK') {
+                    this.value = '';
+                }
+            });
+            input.addEventListener('blur', function() {
+                if (this.value.trim() === '') {
+                    this.value = 'OK';
+                }
+            });
         }
     });
 
@@ -174,7 +192,15 @@ const hiddenIframe = document.getElementById('hidden_iframe');
 hiddenIframe.onload = function () {
     if (submitted) {
         showToast('檢驗紀錄上傳成功！');
+        
+        // 記住訂購單編號
+        const currentPoNumber = document.getElementById('poNumber').value;
+        
         formElement.reset();
+        
+        // 恢復訂購單編號
+        document.getElementById('poNumber').value = currentPoNumber;
+        
         document.getElementById('uploadDate').value = new Date().toISOString().split('T')[0];
         document.getElementById('poPhotoPreview').innerHTML = '';
         document.getElementById('physicalPhotoPreview').innerHTML = '';
