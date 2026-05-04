@@ -93,6 +93,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // 設定退庫數量點擊時清除預設的 "0"
+    const returnIds = ['return019', 'return020'];
+    returnIds.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('focus', function() {
+                if (this.value === '0') {
+                    this.value = '';
+                }
+            });
+            input.addEventListener('blur', function() {
+                if (this.value.trim() === '') {
+                    this.value = '0';
+                }
+            });
+        }
+    });
+
     // 頁籤切換邏輯
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');

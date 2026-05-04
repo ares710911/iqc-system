@@ -1,13 +1,13 @@
 :root {
-    --primary-color: #3b82f6;
-    --primary-hover: #2563eb;
-    --bg-color: #0f172a;
-    --card-bg: rgba(30, 41, 59, 0.75);
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --border-color: #334155;
-    --success: #10b981;
-    --danger: #ef4444;
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --bg-color: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --border-color: #cbd5e1;
+    --success: #059669;
+    --danger: #dc2626;
     --radius: 16px;
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
@@ -23,7 +23,7 @@
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-color: var(--bg-color);
-    background-image: radial-gradient(circle at top left, #1e293b 0%, #0f172a 100%);
+    background-image: radial-gradient(circle at top left, #ffffff 0%, #e2e8f0 100%);
     color: var(--text-main);
     line-height: 1.5;
     min-height: 100vh;
@@ -87,7 +87,7 @@ body {
     padding: 24px;
     margin-bottom: 20px;
     box-shadow: var(--shadow-md);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
     transition: transform 0.3s ease;
 }
 
@@ -127,7 +127,7 @@ body {
 
 label {
     display: block;
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 500;
     margin-bottom: 6px;
     color: var(--text-main);
@@ -141,9 +141,9 @@ select {
     padding: 12px 14px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    font-size: 1rem;
+    font-size: 1.05rem;
     font-family: inherit;
-    background-color: rgba(15, 23, 42, 0.6);
+    background-color: #ffffff;
     color: var(--text-main);
     transition: all 0.2s ease;
 }
@@ -254,10 +254,10 @@ select {
     left: 0;
     right: 0;
     padding: 16px;
-    background: rgba(15, 23, 42, 0.85);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
     z-index: 10;
 }
 
@@ -351,9 +351,9 @@ select {
     gap: 8px;
     margin-bottom: 24px;
     padding: 4px;
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(255, 255, 255, 0.6);
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .tab-btn {
@@ -392,14 +392,14 @@ select {
     text-align: center;
     color: var(--text-muted);
     padding: 32px 16px;
-    background: rgba(15, 23, 42, 0.4);
+    background: rgba(255, 255, 255, 0.4);
     border-radius: var(--radius);
-    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border: 1px dashed rgba(0, 0, 0, 0.1);
 }
 
 .query-card {
     background: var(--card-bg);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
     border-radius: var(--radius);
     padding: 16px;
     margin-bottom: 12px;
@@ -412,7 +412,7 @@ select {
     align-items: center;
     margin-bottom: 12px;
     padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .query-po {
@@ -424,7 +424,7 @@ select {
 .query-vendor {
     font-size: 0.85rem;
     color: var(--text-muted);
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.05);
     padding: 4px 8px;
     border-radius: 4px;
 }
