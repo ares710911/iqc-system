@@ -3,215 +3,372 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>進料檢驗登錄系統</title>
+    <title>檢驗與登錄管理系統</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4f46e5">
+    <meta name="theme-color" content="#2563eb">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="app-container">
-        <header class="app-header">
-            <h1>進料檢驗登錄系統</h1>
-            <p>Incoming Quality Control</p>
-            <a href="defective.html" class="nav-switch-btn">切換至來料不良系統</a>
-        </header>
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
-        <!-- 頁籤切換導覽列 -->
-        <div class="tabs">
-            <button class="tab-btn active" data-target="iqcForm">資料登錄</button>
-            <button class="tab-btn" data-target="querySection">資訊查詢</button>
-        </div>
+    <!-- 手機版頂部標題列 -->
+    <header class="mobile-header">
+        <button id="menuToggleBtn" class="menu-toggle-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <span id="mobileTitle" class="mobile-title">進料檢驗 - 資料登錄</span>
+    </header>
 
-        <main class="form-container">
-            <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+    <div class="app-layout">
+        <!-- 左側側邊欄 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span class="logo-icon">📋</span>
+                <div class="logo-text">
+                    <h2>品質檢驗系統</h2>
+                    <p>Quality Control System</p>
+                </div>
+            </div>
             
-            <!-- 原本的登錄表單區塊 -->
-            <form id="iqcForm" class="tab-content active" action="https://script.google.com/macros/s/AKfycbxjoY2yX5BsyojlCUcv8VV8xRhA_ZQEIoMs7CySMDX14MDTpBGVOj9UurjzmbRZohHm/exec" method="POST" target="hidden_iframe">
-                <!-- 隱藏欄位：用來放置壓縮後的 Base64 字串 -->
-                <input type="hidden" id="hiddenPoPhotoBase64" name="poPhotoBase64">
-                <input type="hidden" id="hiddenPhysicalPhotoBase64" name="physicalPhotoBase64">
-
-                <!-- 基本資訊區塊 -->
-                <section class="form-section">
-                    <h2>基本資訊</h2>
-                    <div class="form-group">
-                        <label for="uploadDate">上傳日期</label>
-                        <input type="date" id="uploadDate" name="uploadDate" required>
+            <nav class="sidebar-nav">
+                <!-- 進料檢驗大目錄 -->
+                <div class="nav-item-group open">
+                    <div class="nav-group-header">
+                        <span class="icon">📥</span>
+                        <span class="text">進料檢驗</span>
+                        <span class="arrow">▼</span>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="personnel">人員</label>
-                        <select id="personnel" name="personnel" required>
-                            <option value="" disabled selected>資料載入中...</option>
-                        </select>
-                    </div>
+                    <ul class="nav-sub-list">
+                        <li><a href="#" class="nav-sub-item active" data-target="iqcFormSection">資料登錄</a></li>
+                        <li><a href="#" class="nav-sub-item" data-target="iqcQuerySection">資訊查詢</a></li>
+                    </ul>
+                </div>
 
-                    <div class="form-group">
-                        <label for="poNumber">訂購單編號</label>
-                        <input type="text" id="poNumber" name="poNumber" required placeholder="請輸入或掃描訂購單號">
+                <!-- 來料不良大目錄 -->
+                <div class="nav-item-group open">
+                    <div class="nav-group-header">
+                        <span class="icon">⚠️</span>
+                        <span class="text">來料不良</span>
+                        <span class="arrow">▼</span>
                     </div>
+                    <ul class="nav-sub-list">
+                        <li><a href="#" class="nav-sub-item" data-target="defectiveFormSection">不良登錄</a></li>
+                        <li><a href="#" class="nav-sub-item" data-target="defectiveQuerySection">資訊查詢</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
 
-                    <div class="form-group">
-                        <label for="partNumber">品號</label>
-                        <input type="text" id="partNumber" name="partNumber" required placeholder="請輸入或掃描品號">
-                    </div>
+        <!-- 手機版側邊欄遮罩 -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-                    <div class="form-group">
-                        <label for="partName">品名</label>
-                        <input type="text" id="partName" name="partName" required placeholder="自動帶出品名" readonly>
-                    </div>
+        <!-- 右側主工作區 -->
+        <main class="main-content">
+            
+            <!-- ==================== 1. 進料檢驗 - 資料登錄 ==================== -->
+            <section id="iqcFormSection" class="content-section active">
+                <div class="form-container">
+                    <form id="iqcForm" action="https://script.google.com/macros/s/AKfycbxjoY2yX5BsyojlCUcv8VV8xRhA_ZQEIoMs7CySMDX14MDTpBGVOj9UurjzmbRZohHm/exec" method="POST" target="hidden_iframe">
+                        <!-- 隱藏欄位：壓縮後的 Base64 字串 -->
+                        <input type="hidden" id="hiddenPoPhotoBase64" name="poPhotoBase64">
+                        <input type="hidden" id="hiddenPhysicalPhotoBase64" name="physicalPhotoBase64">
 
-                    <div class="form-group">
-                        <label for="receiptQty">進貨數量</label>
-                        <input type="number" id="receiptQty" name="receiptQty" required min="1" placeholder="請輸入數量">
-                    </div>
+                        <section class="form-section">
+                            <h2>基本資訊</h2>
+                            <div class="form-group">
+                                <label for="iqcUploadDate">上傳日期</label>
+                                <input type="date" id="iqcUploadDate" name="uploadDate" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="iqcPersonnel">人員</label>
+                                <select id="iqcPersonnel" name="personnel" required>
+                                    <option value="" disabled selected>資料載入中...</option>
+                                </select>
+                            </div>
 
-                    <div class="form-group">
-                        <label for="vendor">廠商</label>
-                        <select id="vendor" name="vendor" required>
-                            <option value="" disabled selected>請先輸入品號</option>
-                        </select>
-                    </div>
-                </section>
+                            <div class="form-group">
+                                <label for="poNumber">訂購單編號</label>
+                                <input type="text" id="poNumber" name="poNumber" required placeholder="請輸入或掃描訂購單號">
+                            </div>
 
-                <!-- 檢驗結果區塊 -->
-                <section class="form-section">
-                    <h2>檢驗紀錄</h2>
-                    <div class="form-group">
-                        <label for="inspectionMethod">檢驗方式</label>
-                        <select id="inspectionMethod" name="inspectionMethod" required>
-                            <option value="" disabled selected>請選擇檢驗方式</option>
-                            <option value="全檢">全檢</option>
-                            <option value="抽檢">抽檢</option>
-                            <option value="免檢">免檢</option>
-                        </select>
-                    </div>
+                            <div class="form-group">
+                                <label for="iqcPartNumber">品號</label>
+                                <input type="text" id="iqcPartNumber" name="partNumber" required placeholder="請輸入或掃描品號">
+                            </div>
 
-                    <div class="form-row">
-                        <div class="form-group half">
-                            <label for="appearance">外觀</label>
-                            <select id="appearance" name="appearance" required>
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                        </div>
-                        <div class="form-group half">
-                            <label for="dimensions">尺寸</label>
-                            <select id="dimensions" name="dimensions" required>
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                        </div>
-                        <div class="form-group half">
-                            <label for="characteristics">特性</label>
-                            <select id="characteristics" name="characteristics" required>
-                                <option value="OK">OK</option>
-                                <option value="NG">NG</option>
-                            </select>
-                        </div>
-                    </div>
+                            <div class="form-group">
+                                <label for="iqcPartName">品名</label>
+                                <input type="text" id="iqcPartName" name="partName" required placeholder="自動帶出品名" readonly>
+                            </div>
 
-                    <!-- 抽驗區塊 (可選填) -->
-                    <div class="form-group-collapsible">
-                        <h3 class="collapsible-header">抽驗詳細數據 (選填)</h3>
-                        <div class="collapsible-content">
+                            <div class="form-group">
+                                <label for="receiptQty">進貨數量</label>
+                                <input type="number" id="receiptQty" name="receiptQty" required min="1" placeholder="請輸入數量">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="vendor">廠商</label>
+                                <select id="vendor" name="vendor" required>
+                                    <option value="" disabled selected>請先輸入品號</option>
+                                </select>
+                            </div>
+                        </section>
+
+                        <section class="form-section">
+                            <h2>檢驗紀錄</h2>
+                            <div class="form-group">
+                                <label for="inspectionMethod">檢驗方式</label>
+                                <select id="inspectionMethod" name="inspectionMethod" required>
+                                    <option value="" disabled selected>請選擇檢驗方式</option>
+                                    <option value="全檢">全檢</option>
+                                    <option value="抽檢">抽檢</option>
+                                    <option value="免檢">免檢</option>
+                                </select>
+                            </div>
+
                             <div class="form-row">
                                 <div class="form-group half">
-                                    <label for="sampleA">抽驗檢驗 A</label>
-                                    <input type="text" id="sampleA" name="sampleA" placeholder="測量值" value="OK">
+                                    <label for="appearance">外觀</label>
+                                    <select id="appearance" name="appearance" required>
+                                        <option value="OK">OK</option>
+                                        <option value="NG">NG</option>
+                                    </select>
                                 </div>
                                 <div class="form-group half">
-                                    <label for="sampleB">抽驗檢驗 B</label>
-                                    <input type="text" id="sampleB" name="sampleB" placeholder="測量值" value="OK">
+                                    <label for="dimensions">尺寸</label>
+                                    <select id="dimensions" name="dimensions" required>
+                                        <option value="OK">OK</option>
+                                        <option value="NG">NG</option>
+                                    </select>
                                 </div>
                                 <div class="form-group half">
-                                    <label for="sampleC">抽驗檢驗 C</label>
-                                    <input type="text" id="sampleC" name="sampleC" placeholder="測量值" value="OK">
-                                </div>
-                                <div class="form-group half">
-                                    <label for="sampleD">抽驗檢驗 D</label>
-                                    <input type="text" id="sampleD" name="sampleD" placeholder="測量值" value="OK">
-                                </div>
-                                <div class="form-group half">
-                                    <label for="sampleE">抽驗檢驗 E</label>
-                                    <input type="text" id="sampleE" name="sampleE" placeholder="測量值" value="OK">
-                                </div>
-                                <div class="form-group half">
-                                    <label for="sampleF">抽驗檢驗 F</label>
-                                    <input type="text" id="sampleF" name="sampleF" placeholder="測量值" value="OK">
+                                    <label for="characteristics">特性</label>
+                                    <select id="characteristics" name="characteristics" required>
+                                        <option value="OK">OK</option>
+                                        <option value="NG">NG</option>
+                                    </select>
                                 </div>
                             </div>
+
+                            <!-- 抽驗區塊 (可選填) -->
+                            <div class="form-group-collapsible">
+                                <h3 class="collapsible-header">抽驗詳細數據 (選填)</h3>
+                                <div class="collapsible-content">
+                                    <div class="form-row">
+                                        <div class="form-group half">
+                                            <label for="sampleA">抽驗檢驗 A</label>
+                                            <input type="text" id="sampleA" name="sampleA" placeholder="測量值" value="OK">
+                                        </div>
+                                        <div class="form-group half">
+                                            <label for="sampleB">抽驗檢驗 B</label>
+                                            <input type="text" id="sampleB" name="sampleB" placeholder="測量值" value="OK">
+                                        </div>
+                                        <div class="form-group half">
+                                            <label for="sampleC">抽驗檢驗 C</label>
+                                            <input type="text" id="sampleC" name="sampleC" placeholder="測量值" value="OK">
+                                        </div>
+                                        <div class="form-group half">
+                                            <label for="sampleD">抽驗檢驗 D</label>
+                                            <input type="text" id="sampleD" name="sampleD" placeholder="測量值" value="OK">
+                                        </div>
+                                        <div class="form-group half">
+                                            <label for="sampleE">抽驗檢驗 E</label>
+                                            <input type="text" id="sampleE" name="sampleE" placeholder="測量值" value="OK">
+                                        </div>
+                                        <div class="form-group half">
+                                            <label for="sampleF">抽驗檢驗 F</label>
+                                            <input type="text" id="sampleF" name="sampleF" placeholder="測量值" value="OK">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="result">判定</label>
+                                <select id="result" name="result" required class="highlight-select">
+                                    <option value="" disabled selected>請選擇最終判定</option>
+                                    <option value="OK">OK</option>
+                                    <option value="NG">NG</option>
+                                    <option value="特採">特採</option>
+                                </select>
+                            </div>
+                        </section>
+
+                        <section class="form-section">
+                            <h2>附件上傳</h2>
+                            <div class="form-group file-upload-group">
+                                <label class="file-upload-label">
+                                    <span class="upload-icon">📄</span>
+                                    <span class="upload-text">點擊拍攝或上傳<br><b>訂購單照片</b></span>
+                                    <input type="file" id="poPhoto" name="poPhoto" accept="image/*" capture="environment">
+                                </label>
+                                <div id="poPhotoPreview" class="image-preview"></div>
+                            </div>
+
+                            <div class="form-group file-upload-group">
+                                <label class="file-upload-label">
+                                    <span class="upload-icon">📦</span>
+                                    <span class="upload-text">點擊拍攝或上傳<br><b>實體照片</b></span>
+                                    <input type="file" id="physicalPhoto" name="physicalPhoto" accept="image/*" capture="environment">
+                                </label>
+                                <div id="physicalPhotoPreview" class="image-preview"></div>
+                            </div>
+                        </section>
+
+                        <div class="form-actions">
+                            <button type="submit" id="iqcSubmitBtn" class="btn-primary">
+                                <span class="btn-text">送出檢驗紀錄</span>
+                                <div class="spinner hidden"></div>
+                            </button>
                         </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="result">判定</label>
-                        <select id="result" name="result" required class="highlight-select">
-                            <option value="" disabled selected>請選擇最終判定</option>
-                            <option value="OK">OK</option>
-                            <option value="NG">NG</option>
-                            <option value="特採">特採</option>
-                        </select>
-                    </div>
-                </section>
-
-                <!-- 附件區塊 -->
-                <section class="form-section">
-                    <h2>附件上傳</h2>
-                    
-                    <div class="form-group file-upload-group">
-                        <label class="file-upload-label">
-                            <span class="upload-icon">📄</span>
-                            <span class="upload-text">點擊拍攝或上傳<br><b>訂購單照片</b></span>
-                            <input type="file" id="poPhoto" name="poPhoto" accept="image/*" capture="environment">
-                        </label>
-                        <div id="poPhotoPreview" class="image-preview"></div>
-                    </div>
-
-                    <div class="form-group file-upload-group">
-                        <label class="file-upload-label">
-                            <span class="upload-icon">📦</span>
-                            <span class="upload-text">點擊拍攝或上傳<br><b>實體照片</b></span>
-                            <input type="file" id="physicalPhoto" name="physicalPhoto" accept="image/*" capture="environment">
-                        </label>
-                        <div id="physicalPhotoPreview" class="image-preview"></div>
-                    </div>
-                </section>
-
-                <div class="form-actions">
-                    <button type="submit" id="submitBtn" class="btn-primary">
-                        <span class="btn-text">送出檢驗紀錄</span>
-                        <div class="spinner hidden"></div>
-                    </button>
-                </div>
-            </form>
-
-            <!-- 資訊查詢區塊 -->
-            <section id="querySection" class="tab-content hidden">
-                <div class="form-section">
-                    <h2>依日期查詢</h2>
-                    <div class="form-group">
-                        <label for="queryDate">查詢日期</label>
-                        <input type="date" id="queryDate" required>
-                    </div>
-                    <button type="button" id="queryBtn" class="btn-primary" style="margin-top: 16px; position: relative; width: 100%;">
-                        <span class="btn-text">開始查詢</span>
-                        <div class="spinner hidden" id="querySpinner"></div>
-                    </button>
-                </div>
-                
-                <div id="queryResults" class="query-results">
-                    <!-- 查詢結果卡片將會動態插入這裡 -->
-                    <div class="empty-state">請選擇日期並點擊查詢</div>
+                    </form>
                 </div>
             </section>
+
+            <!-- ==================== 2. 進料檢驗 - 資訊查詢 ==================== -->
+            <section id="iqcQuerySection" class="content-section hidden">
+                <div class="form-container">
+                    <div class="form-section">
+                        <h2>依日期查詢進料紀錄</h2>
+                        <div class="form-group">
+                            <label for="iqcQueryDate">查詢日期</label>
+                            <input type="date" id="iqcQueryDate" required>
+                        </div>
+                        <button type="button" id="iqcQueryBtn" class="btn-primary" style="margin-top: 16px; position: relative; width: 100%;">
+                            <span class="btn-text">開始查詢</span>
+                            <div class="spinner hidden" id="iqcQuerySpinner"></div>
+                        </button>
+                    </div>
+                    
+                    <div id="iqcQueryResults" class="query-results">
+                        <div class="empty-state">請選擇日期並點擊查詢</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== 3. 來料不良 - 不良登錄 ==================== -->
+            <section id="defectiveFormSection" class="content-section hidden">
+                <div class="form-container">
+                    <form id="defectiveForm" action="https://script.google.com/macros/s/AKfycbxjoY2yX5BsyojlCUcv8VV8xRhA_ZQEIoMs7CySMDX14MDTpBGVOj9UurjzmbRZohHm/exec" method="POST" target="hidden_iframe">
+                        <input type="hidden" name="systemType" value="defective">
+                        <input type="hidden" id="hiddenDefectPhotoBase64" name="defectPhotoBase64">
+
+                        <section class="form-section">
+                            <h2>基本資訊</h2>
+                            <div class="form-group">
+                                <label for="defectiveUploadDate">上傳日期</label>
+                                <input type="date" id="defectiveUploadDate" name="uploadDate" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="defectivePersonnel">人員</label>
+                                <select id="defectivePersonnel" name="personnel" required>
+                                    <option value="" disabled selected>資料載入中...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="defectivePartNumber">品號</label>
+                                <input type="text" id="defectivePartNumber" name="partNumber" required placeholder="請輸入或掃描品號">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="defectivePartName">品名</label>
+                                <input type="text" id="defectivePartName" name="partName" required placeholder="自動帶出品名" readonly>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="defectQty">數量</label>
+                                <input type="number" id="defectQty" name="defectQty" required min="1" placeholder="請輸入數量">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="productionOrder">生產製令</label>
+                                <input type="text" id="productionOrder" name="productionOrder" required placeholder="請輸入生產製令">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="model">機型</label>
+                                <input type="text" id="model" name="model" required placeholder="自動帶出機型" readonly>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="productionQty">生產數量</label>
+                                <input type="text" id="productionQty" name="productionQty" required placeholder="自動帶出生產數量" readonly>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="defectReason">不良原因</label>
+                                <select id="defectReason" name="defectReason" required>
+                                    <option value="" disabled selected>資料載入中...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group half">
+                                    <label for="return019">退至019倉</label>
+                                    <input type="number" id="return019" name="return019" min="0" placeholder="填寫數量" value="0">
+                                </div>
+                                <div class="form-group half">
+                                    <label for="return020">退至020倉</label>
+                                    <input type="number" id="return020" name="return020" min="0" placeholder="填寫數量" value="0">
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="form-section">
+                            <h2>附件上傳</h2>
+                            <div class="form-group file-upload-group">
+                                <label class="file-upload-label">
+                                    <span class="upload-icon">📷</span>
+                                    <span class="upload-text">點擊拍攝或上傳<br><b>不良照片</b></span>
+                                    <input type="file" id="defectPhoto" name="defectPhoto" accept="image/*" capture="environment">
+                                </label>
+                                <div id="defectPhotoPreview" class="image-preview"></div>
+                            </div>
+                        </section>
+
+                        <div class="form-actions">
+                            <button type="submit" id="defectiveSubmitBtn" class="btn-primary">
+                                <span class="btn-text">送出不良紀錄</span>
+                                <div class="spinner hidden"></div>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ==================== 4. 來料不良 - 資訊查詢 ==================== -->
+            <section id="defectiveQuerySection" class="content-section hidden">
+                <div class="form-container">
+                    <div class="form-section">
+                        <h2>依日期查詢不良紀錄</h2>
+                        <div class="form-group">
+                            <label for="defectiveQueryDate">查詢日期</label>
+                            <input type="date" id="defectiveQueryDate" required>
+                        </div>
+                        <button type="button" id="defectiveQueryBtn" class="btn-primary" style="margin-top: 16px; position: relative; width: 100%;">
+                            <span class="btn-text">開始查詢</span>
+                            <div class="spinner hidden" id="defectiveQuerySpinner"></div>
+                        </button>
+                    </div>
+                    
+                    <div id="defectiveQueryResults" class="query-results">
+                        <div class="empty-state">請選擇日期並點擊查詢</div>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
     <!-- 狀態通知 -->
     <div id="toast" class="toast hidden"></div>
 
-    <script src="app_v6.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
