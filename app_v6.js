@@ -3,7 +3,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxjoY2yX5BsyojlCUcv8
 let globalPartsData = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-    alert("【系統通知】成功載入最新版 V7 系統！");
+    alert("【系統通知】成功載入最新版 V8 系統！");
     const dateInput = document.getElementById('uploadDate');
     const today = new Date().toISOString().split('T')[0];
     dateInput.value = today;
