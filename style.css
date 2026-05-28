@@ -618,6 +618,114 @@ select {
     font-weight: 500;
 }
 
+
+/* --- 三級子選單樣式 --- */
+.nav-sub-group {
+    margin-top: 4px;
+}
+
+.nav-sub-group-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.925rem;
+    color: var(--sidebar-text-muted);
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.nav-sub-group-header:hover {
+    color: var(--sidebar-text);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.nav-sub-group-header .text {
+    flex: 1;
+}
+
+.nav-sub-group-header .sub-arrow {
+    font-size: 0.65rem;
+    transition: transform 0.2s ease;
+    color: var(--sidebar-text-muted);
+}
+
+/* 展開/收合控制 */
+.nav-sub-group.open .nav-sub-group-header .sub-arrow {
+    transform: rotate(0deg);
+}
+
+.nav-sub-group:not(.open) .nav-sub-group-header .sub-arrow {
+    transform: rotate(-90deg);
+}
+
+.nav-sub-sub-list {
+    list-style: none;
+    padding-left: 12px;
+    margin-top: 2px;
+}
+
+.nav-sub-group:not(.open) .nav-sub-sub-list {
+    display: none;
+}
+
+.nav-sub-sub-item {
+    display: block;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: var(--sidebar-text-muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    margin-bottom: 2px;
+    transition: all 0.2s ease;
+}
+
+.nav-sub-sub-item:hover {
+    color: var(--sidebar-text);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-sub-sub-item.active {
+    color: #ffffff;
+    background: var(--primary-color);
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+}
+
+/* --- 查詢結果卡片徽章與顏色 --- */
+.text-success {
+    color: var(--success) !important;
+}
+
+.text-danger {
+    color: var(--danger) !important;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.result-ok {
+    background-color: rgba(5, 150, 105, 0.15);
+    color: var(--success);
+}
+
+.result-ng {
+    background-color: rgba(220, 38, 38, 0.15);
+    color: var(--danger);
+}
+
+.result-special {
+    background-color: rgba(217, 119, 6, 0.15);
+    color: #d97706;
+}
+
 /* --- 手機版響應式設計 --- */
 @media (max-width: 768px) {
     .app-layout {

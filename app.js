@@ -78,18 +78,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 子目錄點擊切換頁面
     const navSubItems = document.querySelectorAll('.nav-sub-item');
+    const navSubSubItems = document.querySelectorAll('.nav-sub-sub-item');
     const contentSections = document.querySelectorAll('.content-section');
 
+    // 處理三級子群組的展開/收合 (資訊查詢)
+    const navSubGroupHeaders = document.querySelectorAll('.nav-sub-group-header');
+    navSubGroupHeaders.forEach(header => {
+        header.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const group = header.parentElement;
+            group.classList.toggle('open');
+        });
+    });
+
+    // 二級選單項目點擊
     navSubItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
 
-            // 1. 切換 active 按鈕樣式
+            // 1. 切換 active 樣式 (並清除三級選單的 active)
             navSubItems.forEach(x => x.classList.remove('active'));
+            navSubSubItems.forEach(x => x.classList.remove('active'));
             item.classList.add('active');
 
-            // 2. 切換右側顯示的區塊
+            // 2. 切換右側顯示的區塊 (若無 data-target 代表只用於展開，不做網頁切換)
             const targetId = item.getAttribute('data-target');
+            if (!targetId) return;
+
             contentSections.forEach(sec => {
                 sec.classList.add('hidden');
                 sec.classList.remove('active');
@@ -109,12 +124,45 @@ document.addEventListener('DOMContentLoaded', () => {
             sidebar.classList.remove('open');
             menuToggleBtn.classList.remove('open');
             sidebarOverlay.classList.remove('show');
+        });
+    });
 
-            // 5. 若切換至查詢頁面，預設填入今日日期
-            if (targetId === 'iqcQuerySection') {
+    // 三級選單項目點擊
+    navSubSubItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // 1. 切換 active 樣式 (並清除二級選單的 active)
+            navSubItems.forEach(x => x.classList.remove('active'));
+            navSubSubItems.forEach(x => x.classList.remove('active'));
+            item.classList.add('active');
+
+            // 2. 切換右側顯示的區塊
+            const targetId = item.getAttribute('data-target');
+            contentSections.forEach(sec => {
+                sec.classList.add('hidden');
+                sec.classList.remove('active');
+            });
+            const activeSection = document.getElementById(targetId);
+            activeSection.classList.remove('hidden');
+            activeSection.classList.add('active');
+
+            // 3. 更新標題文字 (格式: 大目錄 - 中目錄(小項目))
+            const groupText = item.closest('.nav-item-group').querySelector('.nav-group-header .text').textContent;
+            const parentGroupText = item.closest('.nav-sub-group').querySelector('.nav-sub-group-header .text').textContent;
+            const subText = item.textContent;
+            const newTitle = `${groupText} - ${parentGroupText}(${subText})`;
+            mobileTitle.textContent = newTitle;
+            document.title = `${newTitle} | 品質檢驗系統`;
+
+            // 4. 行動版下，切換完自動關閉側邊欄
+            sidebar.classList.remove('open');
+            menuToggleBtn.classList.remove('open');
+            sidebarOverlay.classList.remove('show');
+
+            // 5. 預設填入今日日期
+            if (targetId === 'iqcQueryDateSection') {
                 document.getElementById('iqcQueryDate').value = new Date().toISOString().split('T')[0];
-            } else if (targetId === 'defectiveQuerySection') {
-                document.getElementById('defectiveQueryDate').value = new Date().toISOString().split('T')[0];
             }
         });
     });
@@ -367,21 +415,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ==================== 查詢邏輯 ====================
 
-    // 進料檢驗查詢
-    const iqcQueryBtn = document.getElementById('iqcQueryBtn');
-    if (iqcQueryBtn) {
-        iqcQueryBtn.addEventListener('click', () => {
+    // ==================== 進料查詢共用渲染與多維度查詢事件 ====================
+
+    // 共用渲染進料查詢卡片函數
+    function renderIqcQueryResult(records, container) {
+        if (!records || records.length === 0) {
+            container.innerHTML = '<div class="empty-state">無符合條件的登錄資料</div>';
+            return;
+        }
+
+        container.innerHTML = '';
+        records.forEach(record => {
+            const card = document.createElement('div');
+            card.className = 'query-card';
+
+            // 判定結果對應的 CSS 樣式
+            let resultClass = '';
+            if (record.result === 'OK') resultClass = 'result-ok';
+            else if (record.result === 'NG') resultClass = 'result-ng';
+            else if (record.result === '特採') resultClass = 'result-special';
+
+            card.innerHTML = `
+                <div class="query-card-header">
+                    <span class="query-po">單號: ${record.poNumber || '-'}</span>
+                    <span class="query-vendor">${record.vendor || '-'}</span>
+                </div>
+                <div class="query-detail">
+                    <span class="label">日期</span>
+                    <span class="value">${record.uploadDate || '-'}</span>
+                </div>
+                <div class="query-detail">
+                    <span class="label">品號</span>
+                    <span class="value">${record.partNumber || '-'}</span>
+                </div>
+                <div class="query-detail">
+                    <span class="label">品名</span>
+                    <span class="value">${record.partName || '-'}</span>
+                </div>
+                <div class="query-detail">
+                    <span class="label">進貨量</span>
+                    <span class="value">${record.receiptQty || '-'}</span>
+                </div>
+                <div class="query-detail">
+                    <span class="label">檢驗狀況</span>
+                    <span class="value">
+                        外觀: <span class="${record.appearance === 'NG' ? 'text-danger' : 'text-success'}" style="font-weight:600;">${record.appearance || '-'}</span> | 
+                        尺寸: <span class="${record.dimensions === 'NG' ? 'text-danger' : 'text-success'}" style="font-weight:600;">${record.dimensions || '-'}</span> | 
+                        特性: <span class="${record.characteristics === 'NG' ? 'text-danger' : 'text-success'}" style="font-weight:600;">${record.characteristics || '-'}</span>
+                    </span>
+                </div>
+                <div class="query-detail" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(0,0,0,0.08);">
+                    <span class="label">最終判定</span>
+                    <span class="value badge ${resultClass}">${record.result || '-'}</span>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    // 1. 依日期查詢
+    const iqcQueryDateBtn = document.getElementById('iqcQueryDateBtn');
+    if (iqcQueryDateBtn) {
+        iqcQueryDateBtn.addEventListener('click', () => {
             const dateVal = document.getElementById('iqcQueryDate').value;
             if (!dateVal) {
                 showToast('請選擇查詢日期', 'error');
                 return;
             }
 
-            const btnText = iqcQueryBtn.querySelector('.btn-text');
-            const spinner = iqcQueryBtn.querySelector('.spinner');
-            const resultsContainer = document.getElementById('iqcQueryResults');
+            const btnText = iqcQueryDateBtn.querySelector('.btn-text');
+            const spinner = iqcQueryDateBtn.querySelector('.spinner');
+            const resultsContainer = document.getElementById('iqcQueryDateResults');
 
-            iqcQueryBtn.disabled = true;
+            iqcQueryDateBtn.disabled = true;
             btnText.textContent = '查詢中...';
             spinner.classList.remove('hidden');
             resultsContainer.innerHTML = '<div class="empty-state">資料載入中...</div>';
@@ -389,43 +495,102 @@ document.addEventListener('DOMContentLoaded', () => {
             fetch(`${SCRIPT_URL}?action=query&queryDate=${dateVal}`)
                 .then(res => res.json())
                 .then(data => {
-                    iqcQueryBtn.disabled = false;
+                    iqcQueryDateBtn.disabled = false;
                     btnText.textContent = '開始查詢';
                     spinner.classList.add('hidden');
 
+                    renderIqcQueryResult(data.records, resultsContainer);
                     if (data.records && data.records.length > 0) {
-                        resultsContainer.innerHTML = '';
-                        data.records.forEach(record => {
-                            const card = document.createElement('div');
-                            card.className = 'query-card';
-                            card.innerHTML = `
-                                <div class="query-card-header">
-                                    <span class="query-po">單號: ${record.poNumber || '無編號'}</span>
-                                    <span class="query-vendor">${record.vendor || '無廠商資訊'}</span>
-                                </div>
-                                <div class="query-detail">
-                                    <span class="label">品號</span>
-                                    <span class="value">${record.partNumber || '-'}</span>
-                                </div>
-                                <div class="query-detail">
-                                    <span class="label">品名</span>
-                                    <span class="value">${record.partName || '-'}</span>
-                                </div>
-                                <div class="query-detail">
-                                    <span class="label">進貨量</span>
-                                    <span class="value">${record.receiptQty || '-'}</span>
-                                </div>
-                            `;
-                            resultsContainer.appendChild(card);
-                        });
                         showToast(`查詢完成，共 ${data.records.length} 筆資料`);
-                    } else {
-                        resultsContainer.innerHTML = '<div class="empty-state">該日期無登錄資料</div>';
                     }
                 })
                 .catch(err => {
-                    console.error('查詢失敗:', err);
-                    iqcQueryBtn.disabled = false;
+                    console.error('依日期查詢失敗:', err);
+                    iqcQueryDateBtn.disabled = false;
+                    btnText.textContent = '開始查詢';
+                    spinner.classList.add('hidden');
+                    resultsContainer.innerHTML = '<div class="empty-state">查詢失敗，請檢查網路或稍後再試</div>';
+                    showToast('查詢失敗', 'error');
+                });
+        });
+    }
+
+    // 2. 依訂購單編號查詢
+    const iqcQueryPoBtn = document.getElementById('iqcQueryPoBtn');
+    if (iqcQueryPoBtn) {
+        iqcQueryPoBtn.addEventListener('click', () => {
+            const poVal = document.getElementById('iqcQueryPoVal').value.trim();
+            if (!poVal) {
+                showToast('請輸入訂購單編號', 'error');
+                return;
+            }
+
+            const btnText = iqcQueryPoBtn.querySelector('.btn-text');
+            const spinner = iqcQueryPoBtn.querySelector('.spinner');
+            const resultsContainer = document.getElementById('iqcQueryPoResults');
+
+            iqcQueryPoBtn.disabled = true;
+            btnText.textContent = '查詢中...';
+            spinner.classList.remove('hidden');
+            resultsContainer.innerHTML = '<div class="empty-state">資料載入中...</div>';
+
+            fetch(`${SCRIPT_URL}?action=query&queryPo=${encodeURIComponent(poVal)}`)
+                .then(res => res.json())
+                .then(data => {
+                    iqcQueryPoBtn.disabled = false;
+                    btnText.textContent = '開始查詢';
+                    spinner.classList.add('hidden');
+
+                    renderIqcQueryResult(data.records, resultsContainer);
+                    if (data.records && data.records.length > 0) {
+                        showToast(`查詢完成，共 ${data.records.length} 筆資料`);
+                    }
+                })
+                .catch(err => {
+                    console.error('依單號查詢失敗:', err);
+                    iqcQueryPoBtn.disabled = false;
+                    btnText.textContent = '開始查詢';
+                    spinner.classList.add('hidden');
+                    resultsContainer.innerHTML = '<div class="empty-state">查詢失敗，請檢查網路或稍後再試</div>';
+                    showToast('查詢失敗', 'error');
+                });
+        });
+    }
+
+    // 3. 依品號查詢
+    const iqcQueryPartBtn = document.getElementById('iqcQueryPartBtn');
+    if (iqcQueryPartBtn) {
+        iqcQueryPartBtn.addEventListener('click', () => {
+            const partVal = document.getElementById('iqcQueryPartVal').value.trim();
+            if (!partVal) {
+                showToast('請輸入品號', 'error');
+                return;
+            }
+
+            const btnText = iqcQueryPartBtn.querySelector('.btn-text');
+            const spinner = iqcQueryPartBtn.querySelector('.spinner');
+            const resultsContainer = document.getElementById('iqcQueryPartResults');
+
+            iqcQueryPartBtn.disabled = true;
+            btnText.textContent = '查詢中...';
+            spinner.classList.remove('hidden');
+            resultsContainer.innerHTML = '<div class="empty-state">資料載入中...</div>';
+
+            fetch(`${SCRIPT_URL}?action=query&queryPart=${encodeURIComponent(partVal)}`)
+                .then(res => res.json())
+                .then(data => {
+                    iqcQueryPartBtn.disabled = false;
+                    btnText.textContent = '開始查詢';
+                    spinner.classList.add('hidden');
+
+                    renderIqcQueryResult(data.records, resultsContainer);
+                    if (data.records && data.records.length > 0) {
+                        showToast(`查詢完成，共 ${data.records.length} 筆資料`);
+                    }
+                })
+                .catch(err => {
+                    console.error('依品號查詢失敗:', err);
+                    iqcQueryPartBtn.disabled = false;
                     btnText.textContent = '開始查詢';
                     spinner.classList.add('hidden');
                     resultsContainer.innerHTML = '<div class="empty-state">查詢失敗，請檢查網路或稍後再試</div>';

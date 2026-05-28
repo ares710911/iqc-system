@@ -43,7 +43,18 @@
                     </div>
                     <ul class="nav-sub-list">
                         <li><a href="#" class="nav-sub-item active" data-target="iqcFormSection">資料登錄</a></li>
-                        <li><a href="#" class="nav-sub-item" data-target="iqcQuerySection">資訊查詢</a></li>
+                        <!-- 資訊查詢子目錄 (可展開/收合，底下列出三種查詢) -->
+                        <li class="nav-sub-group open">
+                            <div class="nav-sub-group-header">
+                                <span class="text">資訊查詢</span>
+                                <span class="sub-arrow">▼</span>
+                            </div>
+                            <ul class="nav-sub-sub-list">
+                                <li><a href="#" class="nav-sub-sub-item" data-target="iqcQueryDateSection">日期</a></li>
+                                <li><a href="#" class="nav-sub-sub-item" data-target="iqcQueryPoSection">訂購單編號</a></li>
+                                <li><a href="#" class="nav-sub-sub-item" data-target="iqcQueryPartSection">品號</a></li>
+                            </ul>
+                        </li>
                     </ul>
                 </div>
 
@@ -235,7 +246,9 @@
             </section>
 
             <!-- ==================== 2. 進料檢驗 - 資訊查詢 ==================== -->
-            <section id="iqcQuerySection" class="content-section hidden">
+            
+            <!-- 2.1 依日期查詢 -->
+            <section id="iqcQueryDateSection" class="content-section hidden">
                 <div class="form-container">
                     <div class="form-section">
                         <h2>依日期查詢進料紀錄</h2>
@@ -243,14 +256,56 @@
                             <label for="iqcQueryDate">查詢日期</label>
                             <input type="date" id="iqcQueryDate" required>
                         </div>
-                        <button type="button" id="iqcQueryBtn" class="btn-primary" style="margin-top: 16px; position: relative; width: 100%;">
+                        <button type="button" id="iqcQueryDateBtn" class="btn-primary" style="margin-top: 16px; position: relative; width: 100%;">
                             <span class="btn-text">開始查詢</span>
-                            <div class="spinner hidden" id="iqcQuerySpinner"></div>
+                            <div class="spinner hidden" id="iqcQueryDateSpinner"></div>
                         </button>
                     </div>
                     
-                    <div id="iqcQueryResults" class="query-results">
+                    <div id="iqcQueryDateResults" class="query-results">
                         <div class="empty-state">請選擇日期並點擊查詢</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2.2 依訂購單編號查詢 -->
+            <section id="iqcQueryPoSection" class="content-section hidden">
+                <div class="form-container">
+                    <div class="form-section">
+                        <h2>依訂購單編號查詢進料紀錄</h2>
+                        <div class="form-group">
+                            <label for="iqcQueryPoVal">訂購單編號</label>
+                            <input type="text" id="iqcQueryPoVal" required placeholder="請輸入訂購單編號（支援模糊比對）">
+                        </div>
+                        <button type="button" id="iqcQueryPoBtn" class="btn-primary" style="margin-top: 16px; position: relative; width: 100%;">
+                            <span class="btn-text">開始查詢</span>
+                            <div class="spinner hidden" id="iqcQueryPoSpinner"></div>
+                        </button>
+                    </div>
+                    
+                    <div id="iqcQueryPoResults" class="query-results">
+                        <div class="empty-state">請輸入訂購單編號並點擊查詢</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2.3 依品號查詢 -->
+            <section id="iqcQueryPartSection" class="content-section hidden">
+                <div class="form-container">
+                    <div class="form-section">
+                        <h2>依品號查詢進料紀錄</h2>
+                        <div class="form-group">
+                            <label for="iqcQueryPartVal">品號</label>
+                            <input type="text" id="iqcQueryPartVal" required placeholder="請輸入品號（支援模糊比對）">
+                        </div>
+                        <button type="button" id="iqcQueryPartBtn" class="btn-primary" style="margin-top: 16px; position: relative; width: 100%;">
+                            <span class="btn-text">開始查詢</span>
+                            <div class="spinner hidden" id="iqcQueryPartSpinner"></div>
+                        </button>
+                    </div>
+                    
+                    <div id="iqcQueryPartResults" class="query-results">
+                        <div class="empty-state">請輸入品號並點擊查詢</div>
                     </div>
                 </div>
             </section>
