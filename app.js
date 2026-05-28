@@ -7,7 +7,7 @@ let globalModelsData = [];
 let activeFormType = null; // 用於標記當前送出的表單類型 ('iqc' 或 'defective')
 
 document.addEventListener('DOMContentLoaded', () => {
-    alert("【系統通知】成功載入最新版 V9 子母選單系統！");
+    alert("【系統通知】成功載入最新版 V10 子母選單系統！");
     
     // 初始化日期
     const today = new Date().toISOString().split('T')[0];
@@ -15,51 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('defectiveUploadDate').value = today;
 
     // 載入基礎資料 (人員、品項、不良原因、生產製令機型)
-    fetch(SCRIPT_URL)
-        .then(response => response.json())
-        .then(data => {
-            console.log("基礎資料載入成功", data);
-            
-            // 填入進料與不良人員選單
-            const iqcPersonnel = document.getElementById('iqcPersonnel');
-            const defectivePersonnel = document.getElementById('defectivePersonnel');
-            
-            const defaultOptHtml = '<option value="" disabled selected>請選擇檢驗人員</option>';
-            iqcPersonnel.innerHTML = defaultOptHtml;
-            defectivePersonnel.innerHTML = defaultOptHtml;
-            
-            if (data.personnel) {
-                data.personnel.forEach(person => {
-                    const opt1 = document.createElement('option');
-                    opt1.value = person; opt1.textContent = person;
-                    iqcPersonnel.appendChild(opt1);
-
-                    const opt2 = document.createElement('option');
-                    opt2.value = person; opt2.textContent = person;
-                    defectivePersonnel.appendChild(opt2);
-                });
-            }
-            
-            // 儲存 PART 與 Model 資料
-            if (data.parts) globalPartsData = data.parts;
-            if (data.models) globalModelsData = data.models;
-
-            // 填入不良原因選單
-            const defectReasonSelect = document.getElementById('defectReason');
-            if (defectReasonSelect && data.defectReasons) {
-                defectReasonSelect.innerHTML = '<option value="" disabled selected>請選擇不良原因</option>';
-                data.defectReasons.forEach(reason => {
-                    const option = document.createElement('option');
-                    option.value = reason;
-                    option.textContent = reason;
-                    defectReasonSelect.appendChild(option);
-                });
-            }
-        })
-        .catch(error => {
-            console.error('無法載入基礎資料:', error);
-            showToast('無法載入人員與選項資料，請重新整理頁面。', 'error');
-        });
+    loadBaseData(true);
 
     // ==================== 左側子母選單與 RWD 邏輯 ====================
     const sidebar = document.getElementById('sidebar');
@@ -599,6 +555,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ==================== 系統 - 生產製令 Model 同步 ====================
+    const syncModelBtn = document.getElementById('syncModelBtn');
+    if (syncModelBtn) {
+        syncModelBtn.addEventListener('click', () => {
+            const btnText = syncModelBtn.querySelector('.btn-text');
+            const spinner = document.getElementById('syncModelSpinner');
+            
+            syncModelBtn.disabled = true;
+            btnText.textContent = '同步中，請稍候...';
+            spinner.classList.remove('hidden');
+            
+            fetch(`${SCRIPT_URL}?action=syncModel`)
+                .then(res => res.json())
+                .then(data => {
+                    syncModelBtn.disabled = false;
+                    btnText.textContent = '開始同步 Model 資料';
+                    spinner.classList.add('hidden');
+                    
+                    if (data.success) {
+                        showToast(`Model 資料同步成功！共更新 ${data.count} 筆資料`, 'success');
+                        // 同步成功後在背景重新整理基礎資料
+                        loadBaseData(true);
+                    } else {
+                        showToast(`同步失敗: ${data.error}`, 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error('同步 Model 失敗:', err);
+                    syncModelBtn.disabled = false;
+                    btnText.textContent = '開始同步 Model 資料';
+                    spinner.classList.add('hidden');
+                    showToast('同步失敗，請檢查網路或稍後再試', 'error');
+                });
+        });
+    }
+
     // 來料不良查詢
     const defQueryBtn = document.getElementById('defectiveQueryBtn');
     if (defQueryBtn) {
@@ -739,6 +731,64 @@ function showToast(message, type = 'success') {
             toast.className = 'toast hidden';
         }, 3000);
     }
+}
+
+// 載入與重新整理基礎資料 (人員、品項、不良原因、生產製令機型)
+function loadBaseData(isSilent = false) {
+    if (!isSilent) {
+        showToast('載入系統基礎資料中...', 'info');
+    }
+    return fetch(SCRIPT_URL)
+        .then(response => response.json())
+        .then(data => {
+            console.log("基礎資料載入成功", data);
+            
+            // 填入進料與不良人員選單
+            const iqcPersonnel = document.getElementById('iqcPersonnel');
+            const defectivePersonnel = document.getElementById('defectivePersonnel');
+            
+            const defaultOptHtml = '<option value="" disabled selected>請選擇檢驗人員</option>';
+            if (iqcPersonnel) iqcPersonnel.innerHTML = defaultOptHtml;
+            if (defectivePersonnel) defectivePersonnel.innerHTML = defaultOptHtml;
+            
+            if (data.personnel) {
+                data.personnel.forEach(person => {
+                    if (iqcPersonnel) {
+                        const opt1 = document.createElement('option');
+                        opt1.value = person; opt1.textContent = person;
+                        iqcPersonnel.appendChild(opt1);
+                    }
+                    if (defectivePersonnel) {
+                        const opt2 = document.createElement('option');
+                        opt2.value = person; opt2.textContent = person;
+                        defectivePersonnel.appendChild(opt2);
+                    }
+                });
+            }
+            
+            // 儲存 PART 與 Model 資料
+            if (data.parts) globalPartsData = data.parts;
+            if (data.models) globalModelsData = data.models;
+
+            // 填入不良原因選單
+            const defectReasonSelect = document.getElementById('defectReason');
+            if (defectReasonSelect && data.defectReasons) {
+                defectReasonSelect.innerHTML = '<option value="" disabled selected>請選擇不良原因</option>';
+                data.defectReasons.forEach(reason => {
+                    const option = document.createElement('option');
+                    option.value = reason;
+                    option.textContent = reason;
+                    defectReasonSelect.appendChild(option);
+                });
+            }
+            if (!isSilent) {
+                showToast('系統資料載入完成');
+            }
+        })
+        .catch(error => {
+            console.error('無法載入基礎資料:', error);
+            showToast('無法載入人員與選項資料，請重新整理頁面。', 'error');
+        });
 }
 
 // 圖片壓縮轉換 Base64

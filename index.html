@@ -70,6 +70,18 @@
                         <li><a href="#" class="nav-sub-item" data-target="defectiveQuerySection">資訊查詢</a></li>
                     </ul>
                 </div>
+
+                <!-- 系統設定大目錄 -->
+                <div class="nav-item-group open">
+                    <div class="nav-group-header">
+                        <span class="icon">⚙️</span>
+                        <span class="text">系統</span>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <ul class="nav-sub-list">
+                        <li><a href="#" class="nav-sub-item" data-target="systemSyncSection">生產製令</a></li>
+                    </ul>
+                </div>
             </nav>
         </aside>
 
@@ -419,6 +431,28 @@
                     
                     <div id="defectiveQueryResults" class="query-results">
                         <div class="empty-state">請選擇日期並點擊查詢</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== 5. 系統 - 生產製令 Model 同步 ==================== -->
+            <section id="systemSyncSection" class="content-section hidden">
+                <div class="form-container">
+                    <div class="form-section">
+                        <h2>生產製令 Model 資料同步</h2>
+                        <div style="margin-bottom: 20px; line-height: 1.6; color: var(--text-muted); font-size: 0.95rem;">
+                            <p>此功能將會從外部生產排程試算表同步最新的 Model 對照表資料。</p>
+                            <ul style="margin-left: 20px; margin-top: 8px; margin-bottom: 8px;">
+                                <li><b>來源</b>：排程 Model (B ~ D 欄)</li>
+                                <li><b>目標</b>：本系統 Model 分頁 (A ~ C 欄)</li>
+                            </ul>
+                            <p style="color: var(--danger); font-weight: 500;">注意：同步會完全覆寫本系統試算表中的 Model 分頁資料，請確認後再執行。</p>
+                        </div>
+                        
+                        <button type="button" id="syncModelBtn" class="btn-primary" style="position: relative; width: 100%;">
+                            <span class="btn-text">開始同步 Model 資料</span>
+                            <div class="spinner hidden" id="syncModelSpinner"></div>
+                        </button>
                     </div>
                 </div>
             </section>
