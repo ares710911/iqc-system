@@ -309,6 +309,7 @@ label {
 input[type="text"],
 input[type="number"],
 input[type="date"],
+textarea,
 select {
     width: 100%;
     padding: 12px 14px;
@@ -319,6 +320,12 @@ select {
     background-color: #ffffff;
     color: var(--text-main);
     transition: all 0.2s ease;
+}
+
+textarea {
+    resize: none;
+    line-height: 1.4;
+    min-height: 100px;
 }
 
 /* 連動產生的資訊唯讀欄位 */

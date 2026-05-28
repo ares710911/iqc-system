@@ -1,4 +1,4 @@
-const CACHE_NAME = 'iqc-netlify-v14';
+const CACHE_NAME = 'iqc-netlify-v15';
 const urlsToCache = [
   './',
   './index.html',
