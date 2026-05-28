@@ -322,14 +322,16 @@ select {
 }
 
 /* 連動產生的資訊唯讀欄位 */
-input[readonly] {
+input[readonly],
+textarea[readonly] {
     background-color: #f5f3ff;
     color: #6d28d9;
     font-weight: 600;
     border-color: #c4b5fd;
 }
 
-input[readonly]:focus {
+input[readonly]:focus,
+textarea[readonly]:focus {
     outline: none;
     box-shadow: none;
     border-color: #c4b5fd;
@@ -421,17 +423,57 @@ select {
 
 .image-preview {
     margin-top: 12px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
-.image-preview img {
-    width: 100%;
+/* 預覽照片項目容器與刪除按鈕 */
+.preview-item {
+    position: relative;
+    display: inline-block;
+    width: 100px;
     height: 100px;
+}
+
+.preview-item img {
+    width: 100% !important;
+    height: 100% !important;
     object-fit: cover;
     border-radius: 8px;
     box-shadow: var(--shadow-sm);
+}
+
+.preview-delete-btn {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--danger);
+    color: white !important;
+    border: none;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.1s;
+    z-index: 10;
+}
+
+.preview-delete-btn:hover {
+    background: #b91c1c;
+    transform: scale(1.1);
+}
+
+.preview-delete-btn:active {
+    transform: scale(0.9);
 }
 
 /* 按鈕 */

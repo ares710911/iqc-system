@@ -7,7 +7,7 @@ let globalModelsData = [];
 let activeFormType = null; // 用於標記當前送出的表單類型 ('iqc' 或 'defective')
 
 document.addEventListener('DOMContentLoaded', () => {
-    alert("【系統通知】成功載入最新版 V8 子母選單系統！");
+    alert("【系統通知】成功載入最新版 V9 子母選單系統！");
     
     // 初始化日期
     const today = new Date().toISOString().split('T')[0];
@@ -135,9 +135,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ==================== 欄位連動與自動填值 ====================
 
-    // A. 進料檢驗 - 品號連動 (帶出品名與廠商)
+    // A. 進料檢驗 - 品號連動 (帶出品名、檢驗過程與廠商)
     const iqcPartNumberInput = document.getElementById('iqcPartNumber');
     const iqcPartNameInput = document.getElementById('iqcPartName');
+    const iqcPartSpecInput = document.getElementById('iqcPartSpec');
     const vendorSelect = document.getElementById('vendor');
 
     iqcPartNumberInput.addEventListener('input', function() {
@@ -148,6 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (matchedParts.length > 0) {
             iqcPartNameInput.value = matchedParts[0].partName;
+            iqcPartSpecInput.value = matchedParts[0].partSpec || '';
             vendorSelect.innerHTML = '<option value="" disabled selected>請選擇廠商</option>';
             matchedParts.forEach(p => {
                 const option = document.createElement('option');
@@ -160,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             iqcPartNameInput.value = '';
+            iqcPartSpecInput.value = '';
             vendorSelect.innerHTML = '<option value="" disabled selected>請先輸入品號</option>';
         }
     });
@@ -228,9 +231,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ==================== 照片預覽設定 ====================
-    setupImagePreview('poPhoto', 'poPhotoPreview');
-    setupImagePreview('physicalPhoto', 'physicalPhotoPreview');
-    setupImagePreview('defectPhoto', 'defectPhotoPreview');
+    setupImagePreview('poPhoto', 'poPhotoPreview', 'hiddenPoPhotoBase64');
+    setupImagePreview('physicalPhoto', 'physicalPhotoPreview', 'hiddenPhysicalPhotoBase64');
+    setupImagePreview('defectPhoto', 'defectPhotoPreview', 'hiddenDefectPhotoBase64');
 
     // ==================== 表單非同步上傳與 Iframe 監聽 ====================
     const iqcForm = document.getElementById('iqcForm');
@@ -510,24 +513,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// 設置照片預覽
-function setupImagePreview(inputId, previewId) {
+// 設置照片預覽與刪除邏輯
+function setupImagePreview(inputId, previewId, hiddenInputId) {
     const input = document.getElementById(inputId);
     const preview = document.getElementById(previewId);
+    const hiddenInput = document.getElementById(hiddenInputId);
 
     if (input && preview) {
         input.addEventListener('change', function () {
             preview.innerHTML = '';
             const files = this.files;
 
-            if (files) {
+            if (files && files.length > 0) {
                 Array.from(files).forEach(file => {
                     if (file.type.startsWith('image/')) {
                         const reader = new FileReader();
                         reader.onload = function (e) {
+                            // 建立預覽容器
+                            const previewItem = document.createElement('div');
+                            previewItem.className = 'preview-item';
+
+                            // 建立圖片
                             const img = document.createElement('img');
                             img.src = e.target.result;
-                            preview.appendChild(img);
+                            previewItem.appendChild(img);
+
+                            // 建立刪除按鈕
+                            const deleteBtn = document.createElement('button');
+                            deleteBtn.type = 'button';
+                            deleteBtn.className = 'preview-delete-btn';
+                            deleteBtn.innerHTML = '×';
+                            deleteBtn.addEventListener('click', (event) => {
+                                event.preventDefault();
+                                previewItem.remove(); // 移除預覽
+                                input.value = ''; // 清空 file input
+                                if (hiddenInput) {
+                                    hiddenInput.value = ''; // 清空隱藏的 base64 input
+                                }
+                            });
+                            previewItem.appendChild(deleteBtn);
+
+                            preview.appendChild(previewItem);
                         }
                         reader.readAsDataURL(file);
                     }
