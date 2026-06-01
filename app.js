@@ -636,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <span class="value">${record.partName || '-'}</span>
                                 </div>
                                 <div class="query-detail">
-                                    <span class="label">不良數</span>
+                                    <span class="label">不良數量</span>
                                     <span class="value">${record.defectQty || '-'}</span>
                                 </div>
                                 <div class="query-detail">
