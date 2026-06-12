@@ -95,9 +95,12 @@
             <section id="iqcFormSection" class="content-section active">
                 <div class="form-container">
                     <form id="iqcForm" action="https://script.google.com/macros/s/AKfycbxjoY2yX5BsyojlCUcv8VV8xRhA_ZQEIoMs7CySMDX14MDTpBGVOj9UurjzmbRZohHm/exec" method="POST" target="hidden_iframe">
-                        <!-- 隱藏欄位：壓縮後的 Base64 字串 -->
+                        <!-- 隱藏欄位：壓縮後的 Base64 字串與編輯資訊 -->
                         <input type="hidden" id="hiddenPoPhotoBase64" name="poPhotoBase64">
                         <input type="hidden" id="hiddenPhysicalPhotoBase64" name="physicalPhotoBase64">
+                        <input type="hidden" id="iqcRowIndex" name="rowIndex">
+                        <input type="hidden" id="existingPoPhotoUrl" name="existingPoPhotoUrl">
+                        <input type="hidden" id="existingPhysicalPhotoUrl" name="existingPhysicalPhotoUrl">
 
                         <section class="form-section">
                             <h2>基本資訊</h2>
@@ -328,6 +331,8 @@
                     <form id="defectiveForm" action="https://script.google.com/macros/s/AKfycbxjoY2yX5BsyojlCUcv8VV8xRhA_ZQEIoMs7CySMDX14MDTpBGVOj9UurjzmbRZohHm/exec" method="POST" target="hidden_iframe">
                         <input type="hidden" name="systemType" value="defective">
                         <input type="hidden" id="hiddenDefectPhotoBase64" name="defectPhotoBase64">
+                        <input type="hidden" id="defectiveRowIndex" name="rowIndex">
+                        <input type="hidden" id="existingDefectPhotoUrl" name="existingDefectPhotoUrl">
 
                         <section class="form-section">
                             <h2>基本資訊</h2>
@@ -458,6 +463,13 @@
             </section>
 
         </main>
+    </div>
+
+    <!-- 圖片預覽燈箱 Modal -->
+    <div id="imagePreviewModal" class="modal hidden">
+        <span class="modal-close" id="modalCloseBtn">&times;</span>
+        <img class="modal-content" id="modalImage">
+        <div id="modalCaption" class="modal-caption"></div>
     </div>
 
     <!-- 狀態通知 -->
