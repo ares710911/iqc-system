@@ -1,6 +1,23 @@
 // 系統 URL 常數
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxjoY2yX5BsyojlCUcv8VV8xRhA_ZQEIoMs7CySMDX14MDTpBGVOj9UurjzmbRZohHm/exec';
 
+// 將 Google Drive 檢視網址轉換為直連圖片網址
+function getDirectImageUrl(url) {
+    if (!url) return '';
+    if (url.includes('drive.google.com')) {
+        let fileId = '';
+        if (url.includes('/file/d/')) {
+            fileId = url.split('/file/d/')[1].split('/')[0];
+        } else if (url.includes('?id=')) {
+            fileId = url.split('?id=')[1].split('&')[0];
+        }
+        if (fileId) {
+            return `https://drive.google.com/uc?export=view&id=${fileId}`;
+        }
+    }
+    return url;
+}
+
 // 全域資料儲存
 let globalPartsData = [];
 let globalModelsData = [];
@@ -579,14 +596,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (record.poPhotoUrl && record.poPhotoUrl !== 'Upload Failed' && record.poPhotoUrl.trim() !== '') {
                     poThumb = `
                         <div class="query-photo-thumbnail" data-src="${record.poPhotoUrl}" data-caption="單號: ${record.poNumber || '-'} - 訂購單照片">
-                            <img src="${record.poPhotoUrl}" alt="訂購單照片">
+                            <img src="${getDirectImageUrl(record.poPhotoUrl)}" alt="訂購單照片">
                             <span>訂購單照片</span>
                         </div>`;
                 }
                 if (record.physicalPhotoUrl && record.physicalPhotoUrl !== 'Upload Failed' && record.physicalPhotoUrl.trim() !== '') {
                     physicalThumb = `
                         <div class="query-photo-thumbnail" data-src="${record.physicalPhotoUrl}" data-caption="品號: ${record.partNumber || '-'} - 實體照片">
-                            <img src="${record.physicalPhotoUrl}" alt="實體照片">
+                            <img src="${getDirectImageUrl(record.physicalPhotoUrl)}" alt="實體照片">
                             <span>實體照片</span>
                         </div>`;
                 }
@@ -869,7 +886,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 photosHtml = `
                                     <div class="query-photos">
                                         <div class="query-photo-thumbnail" data-src="${record.defectPhotoUrl}" data-caption="製令: ${record.productionOrder || '-'} - 不良照片">
-                                            <img src="${record.defectPhotoUrl}" alt="不良照片">
+                                            <img src="${getDirectImageUrl(record.defectPhotoUrl)}" alt="不良照片">
                                             <span>不良照片</span>
                                         </div>
                                     </div>`;
@@ -957,10 +974,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (lightboxModal && modalCloseBtn) {
         modalCloseBtn.addEventListener('click', () => {
             lightboxModal.classList.add('hidden');
+            resetZoom();
         });
         lightboxModal.addEventListener('click', (e) => {
             if (e.target === lightboxModal) {
                 lightboxModal.classList.add('hidden');
+                resetZoom();
             }
         });
     }
@@ -1146,14 +1165,108 @@ function compressImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.7) {
 
 // ==================== 圖片燈箱與編輯功能輔助函數 ====================
 
+// ==================== 圖片燈箱與編輯功能輔助函數 ====================
+
+let isZoomed = false;
+let startX = 0, startY = 0;
+let translateX = 0, translateY = 0;
+let scale = 1;
+
+const modalImage = document.getElementById('modalImage');
+
+if (modalImage) {
+    // 設定圖片初始轉場效果與 cursor 樣式
+    modalImage.style.transition = 'transform 0.2s ease, cursor 0.2s ease';
+    modalImage.style.cursor = 'zoom-in';
+
+    modalImage.addEventListener('click', (e) => {
+        e.stopPropagation(); // 避免觸發 modal 點擊背景關閉事件
+        if (!isZoomed) {
+            isZoomed = true;
+            scale = 2.5;
+            modalImage.style.cursor = 'zoom-out';
+            modalImage.style.transform = `scale(${scale}) translate(0px, 0px)`;
+            translateX = 0;
+            translateY = 0;
+        } else {
+            resetZoom();
+        }
+    });
+
+    // 拖曳移動大圖 (滑鼠)
+    let isDragging = false;
+
+    modalImage.addEventListener('mousedown', (e) => {
+        if (!isZoomed) return;
+        isDragging = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        modalImage.style.transition = 'none'; // 拖曳時停用轉場
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        modalImage.style.transform = `scale(${scale}) translate(${translateX / scale}px, ${translateY / scale}px)`;
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            modalImage.style.transition = 'transform 0.2s ease, cursor 0.2s ease';
+        }
+    });
+
+    // 觸控拖曳移動大圖 (行動裝置)
+    modalImage.addEventListener('touchstart', (e) => {
+        if (!isZoomed) return;
+        isDragging = true;
+        const touch = e.touches[0];
+        startX = touch.clientX - translateX;
+        startY = touch.clientY - translateY;
+        modalImage.style.transition = 'none';
+    });
+
+    modalImage.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault(); // 阻止螢幕背景捲動
+        const touch = e.touches[0];
+        translateX = touch.clientX - startX;
+        translateY = touch.clientY - startY;
+        modalImage.style.transform = `scale(${scale}) translate(${translateX / scale}px, ${translateY / scale}px)`;
+    }, { passive: false });
+
+    modalImage.addEventListener('touchend', () => {
+        if (isDragging) {
+            isDragging = false;
+            modalImage.style.transition = 'transform 0.2s ease, cursor 0.2s ease';
+        }
+    });
+}
+
+function resetZoom() {
+    isZoomed = false;
+    scale = 1;
+    translateX = 0;
+    translateY = 0;
+    if (modalImage) {
+        modalImage.style.transition = 'transform 0.2s ease, cursor 0.2s ease';
+        modalImage.style.transform = 'none';
+        modalImage.style.cursor = 'zoom-in';
+    }
+}
+
 // 開啟圖片燈箱
 function openLightbox(src, caption) {
     const lightboxModal = document.getElementById('imagePreviewModal');
     const modalImage = document.getElementById('modalImage');
     const modalCaption = document.getElementById('modalCaption');
     if (lightboxModal && modalImage && modalCaption) {
-        modalImage.src = src;
-        modalCaption.textContent = caption || '';
+        resetZoom(); // 開啟時重設
+        modalImage.src = getDirectImageUrl(src);
+        modalCaption.textContent = (caption || '') + ' (點擊圖片可放大/縮小，放大後可拖曳移動)';
         lightboxModal.classList.remove('hidden');
     }
 }
@@ -1169,7 +1282,7 @@ function renderExistingPhotoPreview(containerId, photoUrl, hiddenInputId, labelT
         previewItem.className = 'preview-item';
 
         const img = document.createElement('img');
-        img.src = photoUrl;
+        img.src = getDirectImageUrl(photoUrl);
         img.style.cursor = 'pointer';
         img.addEventListener('click', () => {
             openLightbox(img.src, labelText || '預覽照片');
