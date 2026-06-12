@@ -5,6 +5,59 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxjoY2yX5BsyojlCUcv8
 let globalPartsData = [];
 let globalModelsData = [];
 let activeFormType = null; // 用於標記當前送出的表單類型 ('iqc' 或 'defective')
+let activeQuerySectionId = 'iqcQueryDateSection'; // 預設的查詢區塊 ID
+let lastEditedRowIndex = null; // 儲存最後編輯/送出的 rowIndex
+
+// 輔助導航函數
+function navigateToSection(targetId) {
+    const link = document.querySelector(`[data-target="${targetId}"]`);
+    if (link) {
+        link.click();
+    } else {
+        const contentSections = document.querySelectorAll('.content-section');
+        contentSections.forEach(sec => {
+            sec.classList.add('hidden');
+            sec.classList.remove('active');
+        });
+        const activeSection = document.getElementById(targetId);
+        if (activeSection) {
+            activeSection.classList.remove('hidden');
+            activeSection.classList.add('active');
+        }
+    }
+}
+
+// 為已恢復的訂購單照片預覽綁定刪除事件
+function bindPoPhotoDeleteListener() {
+    const preview = document.getElementById('poPhotoPreview');
+    const input = document.getElementById('poPhoto');
+    const hiddenInput = document.getElementById('hiddenPoPhotoBase64');
+    const existingInput = document.getElementById('existingPoPhotoUrl');
+    
+    if (preview && input) {
+        const previewItem = preview.querySelector('.preview-item');
+        if (previewItem) {
+            // 重新加上 pointer cursor 供點擊放大
+            const img = previewItem.querySelector('img');
+            if (img) {
+                img.style.cursor = 'pointer';
+                img.addEventListener('click', () => {
+                    openLightbox(img.src, '訂購單照片');
+                });
+            }
+            const deleteBtn = previewItem.querySelector('.preview-delete-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    previewItem.remove(); // 移除預覽
+                    input.value = ''; // 清空 file input
+                    if (hiddenInput) hiddenInput.value = '';
+                    if (existingInput) existingInput.value = '';
+                });
+            }
+        }
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     alert("【系統通知】成功載入最新版 V10 子母選單系統！");
@@ -61,6 +114,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetId = item.getAttribute('data-target');
             if (!targetId) return;
 
+            if (targetId.includes('Query')) {
+                activeQuerySectionId = targetId;
+            }
+
             contentSections.forEach(sec => {
                 sec.classList.add('hidden');
                 sec.classList.remove('active');
@@ -95,6 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 2. 切換右側顯示的區塊
             const targetId = item.getAttribute('data-target');
+            if (targetId && targetId.includes('Query')) {
+                activeQuerySectionId = targetId;
+            }
             contentSections.forEach(sec => {
                 sec.classList.add('hidden');
                 sec.classList.remove('active');
@@ -239,6 +299,44 @@ document.addEventListener('DOMContentLoaded', () => {
     setupImagePreview('physicalPhoto', 'physicalPhotoPreview', 'hiddenPhysicalPhotoBase64');
     setupImagePreview('defectPhoto', 'defectPhotoPreview', 'hiddenDefectPhotoBase64');
 
+    // ==================== 返回查詢按鈕監聽 ====================
+    const iqcCancelBtn = document.getElementById('iqcCancelBtn');
+    if (iqcCancelBtn) {
+        iqcCancelBtn.addEventListener('click', () => {
+            iqcForm.reset();
+            document.getElementById('iqcRowIndex').value = '';
+            document.getElementById('existingPoPhotoUrl').value = '';
+            document.getElementById('existingPhysicalPhotoUrl').value = '';
+            document.getElementById('hiddenPoPhotoBase64').value = '';
+            document.getElementById('hiddenPhysicalPhotoBase64').value = '';
+            document.getElementById('poPhotoPreview').innerHTML = '';
+            document.getElementById('physicalPhotoPreview').innerHTML = '';
+            
+            const btn = document.getElementById('iqcSubmitBtn');
+            btn.querySelector('.btn-text').textContent = '送出檢驗紀錄';
+            iqcCancelBtn.classList.add('hidden');
+            
+            navigateToSection(activeQuerySectionId);
+        });
+    }
+
+    const defectiveCancelBtn = document.getElementById('defectiveCancelBtn');
+    if (defectiveCancelBtn) {
+        defectiveCancelBtn.addEventListener('click', () => {
+            defectiveForm.reset();
+            document.getElementById('defectiveRowIndex').value = '';
+            document.getElementById('existingDefectPhotoUrl').value = '';
+            document.getElementById('hiddenDefectPhotoBase64').value = '';
+            document.getElementById('defectPhotoPreview').innerHTML = '';
+            
+            const btn = document.getElementById('defectiveSubmitBtn');
+            btn.querySelector('.btn-text').textContent = '送出不良紀錄';
+            defectiveCancelBtn.classList.add('hidden');
+            
+            navigateToSection(activeQuerySectionId);
+        });
+    }
+
     // ==================== 表單非同步上傳與 Iframe 監聽 ====================
     const iqcForm = document.getElementById('iqcForm');
     const defectiveForm = document.getElementById('defectiveForm');
@@ -268,11 +366,29 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('existingPhysicalPhotoUrl').value = '';
             document.getElementById('iqcRowIndex').value = ''; // 編輯完成或重置後清空編輯行
 
+            bindPoPhotoDeleteListener(); // 重新綁定刪除與縮圖點擊放大事件
+
             const btn = document.getElementById('iqcSubmitBtn');
             btn.disabled = false;
             btn.querySelector('.btn-text').textContent = '送出檢驗紀錄';
             btn.querySelector('.spinner').classList.add('hidden');
+            
+            const cancelBtn = document.getElementById('iqcCancelBtn');
+            if (cancelBtn) cancelBtn.classList.add('hidden');
+            
             activeFormType = null;
+
+            // 如果是編輯模式提交，則跳回原查詢頁面並自動重新查詢
+            if (lastEditedRowIndex !== null) {
+                navigateToSection(activeQuerySectionId);
+                setTimeout(() => {
+                    const activeSection = document.getElementById(activeQuerySectionId);
+                    if (activeSection) {
+                        const queryBtn = activeSection.querySelector('.btn-primary');
+                        if (queryBtn) queryBtn.click();
+                    }
+                }, 100);
+            }
             
         } else if (activeFormType === 'defective') {
             showToast('不良品檢驗紀錄上傳成功！');
@@ -288,7 +404,23 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled = false;
             btn.querySelector('.btn-text').textContent = '送出不良紀錄';
             btn.querySelector('.spinner').classList.add('hidden');
+            
+            const cancelBtn = document.getElementById('defectiveCancelBtn');
+            if (cancelBtn) cancelBtn.classList.add('hidden');
+            
             activeFormType = null;
+
+            // 如果是編輯模式提交，則跳回原查詢頁面並自動重新查詢
+            if (lastEditedRowIndex !== null) {
+                navigateToSection(activeQuerySectionId);
+                setTimeout(() => {
+                    const activeSection = document.getElementById(activeQuerySectionId);
+                    if (activeSection) {
+                        const queryBtn = activeSection.querySelector('.btn-primary');
+                        if (queryBtn) queryBtn.click();
+                    }
+                }, 100);
+            }
         }
     };
 
@@ -299,6 +431,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnText = btn.querySelector('.btn-text');
         const spinner = btn.querySelector('.spinner');
         const isEdit = !!document.getElementById('iqcRowIndex').value;
+
+        if (isEdit) {
+            lastEditedRowIndex = document.getElementById('iqcRowIndex').value;
+        } else {
+            lastEditedRowIndex = null;
+        }
 
         btn.disabled = true;
         btnText.textContent = '圖片壓縮中...';
@@ -361,6 +499,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const spinner = btn.querySelector('.spinner');
         const isEdit = !!document.getElementById('defectiveRowIndex').value;
 
+        if (isEdit) {
+            lastEditedRowIndex = document.getElementById('defectiveRowIndex').value;
+        } else {
+            lastEditedRowIndex = null;
+        }
+
         btn.disabled = true;
         btnText.textContent = '圖片壓縮中...';
         spinner.classList.remove('hidden');
@@ -411,9 +555,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         container.innerHTML = '';
+        let highlightedCard = null;
         records.forEach(record => {
             const card = document.createElement('div');
             card.className = 'query-card';
+            
+            if (lastEditedRowIndex !== null && record.rowIndex == lastEditedRowIndex) {
+                card.classList.add('highlight-card');
+                highlightedCard = card;
+            }
 
             // 判定結果對應的 CSS 樣式
             let resultClass = '';
@@ -505,6 +655,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             container.appendChild(card);
         });
+
+        if (highlightedCard) {
+            setTimeout(() => {
+                highlightedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                lastEditedRowIndex = null; // 清除暫存
+            }, 150);
+        }
     }
 
     // 1. 依日期查詢
@@ -697,9 +854,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (data.records && data.records.length > 0) {
                         resultsContainer.innerHTML = '';
+                        let highlightedCard = null;
                         data.records.forEach(record => {
                             const card = document.createElement('div');
                             card.className = 'query-card';
+                            
+                            if (lastEditedRowIndex !== null && record.rowIndex == lastEditedRowIndex) {
+                                card.classList.add('highlight-card');
+                                highlightedCard = card;
+                            }
                             
                             let photosHtml = '';
                             if (record.defectPhotoUrl && record.defectPhotoUrl !== 'Upload Failed' && record.defectPhotoUrl.trim() !== '') {
@@ -766,6 +929,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             resultsContainer.appendChild(card);
                         });
+                        if (highlightedCard) {
+                            setTimeout(() => {
+                                highlightedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                lastEditedRowIndex = null; // 清除暫存
+                            }, 150);
+                        }
                         showToast(`查詢完成，共 ${data.records.length} 筆資料`);
                     } else {
                         resultsContainer.innerHTML = '<div class="empty-state">該日期無登錄資料</div>';
@@ -827,6 +996,10 @@ function setupImagePreview(inputId, previewId, hiddenInputId) {
                             // 建立圖片
                             const img = document.createElement('img');
                             img.src = e.target.result;
+                            img.style.cursor = 'pointer';
+                            img.addEventListener('click', () => {
+                                openLightbox(img.src, '上傳照片預覽');
+                            });
                             previewItem.appendChild(img);
 
                             // 建立刪除按鈕
@@ -997,6 +1170,10 @@ function renderExistingPhotoPreview(containerId, photoUrl, hiddenInputId, labelT
 
         const img = document.createElement('img');
         img.src = photoUrl;
+        img.style.cursor = 'pointer';
+        img.addEventListener('click', () => {
+            openLightbox(img.src, labelText || '預覽照片');
+        });
         previewItem.appendChild(img);
 
         const deleteBtn = document.createElement('button');
@@ -1099,6 +1276,10 @@ function editIqcRecord(record) {
     if (btn) {
         btn.querySelector('.btn-text').textContent = '更新檢驗紀錄';
     }
+    const cancelBtn = document.getElementById('iqcCancelBtn');
+    if (cancelBtn) {
+        cancelBtn.classList.remove('hidden');
+    }
 
     showToast('已載入該筆資料至編輯表單');
 }
@@ -1182,6 +1363,10 @@ function editDefectiveRecord(record) {
     const btn = document.getElementById('defectiveSubmitBtn');
     if (btn) {
         btn.querySelector('.btn-text').textContent = '更新不良紀錄';
+    }
+    const cancelBtn = document.getElementById('defectiveCancelBtn');
+    if (cancelBtn) {
+        cancelBtn.classList.remove('hidden');
     }
 
     showToast('已載入該筆資料至編輯表單');
