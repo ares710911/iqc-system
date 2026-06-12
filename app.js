@@ -12,7 +12,7 @@ function getDirectImageUrl(url) {
             fileId = url.split('?id=')[1].split('&')[0];
         }
         if (fileId) {
-            return `https://drive.google.com/uc?export=view&id=${fileId}`;
+            return `https://lh3.googleusercontent.com/d/${fileId}`;
         }
     }
     return url;
