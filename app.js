@@ -1532,6 +1532,8 @@ function setupMultiSelectDefectReason() {
     const trigger = document.getElementById('defectReasonTrigger');
     const dropdown = document.getElementById('defectReasonDropdown');
     const closeBtn = document.getElementById('closeDefectDropdownBtn');
+    const selectAllBtn = document.getElementById('selectAllDefectBtn');
+    const clearAllBtn = document.getElementById('clearAllDefectBtn');
 
     if (!trigger || !dropdown) return;
 
@@ -1548,6 +1550,27 @@ function setupMultiSelectDefectReason() {
         }
     });
 
+    // 全選按鈕
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const optionsContainer = document.getElementById('defectReasonOptions');
+            if (optionsContainer) {
+                const checkboxes = optionsContainer.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => { cb.checked = true; });
+                updateDefectReasonSelectedState();
+            }
+        });
+    }
+
+    // 清空按鈕
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            resetDefectReasonSelection();
+        });
+    }
+
     // 確定按鈕點擊關閉
     if (closeBtn) {
         closeBtn.addEventListener('click', (e) => {
@@ -1557,7 +1580,7 @@ function setupMultiSelectDefectReason() {
         });
     }
 
-    // 點擊點擊外部自動收合
+    // 點擊外部自動收合
     document.addEventListener('click', (e) => {
         if (!dropdown.contains(e.target) && !trigger.contains(e.target)) {
             dropdown.classList.add('hidden');

@@ -471,7 +471,11 @@
                                 <div id="defectReasonDropdown" class="multi-select-dropdown hidden">
                                     <div class="dropdown-header">
                                         <span>選擇不良原因 (可複選)</span>
-                                        <button type="button" class="btn-close-dropdown" id="closeDefectDropdownBtn">✕ 確定</button>
+                                        <div class="dropdown-actions">
+                                            <button type="button" class="btn-action-text" id="selectAllDefectBtn">全選</button>
+                                            <button type="button" class="btn-action-text" id="clearAllDefectBtn">清空</button>
+                                            <button type="button" class="btn-close-dropdown" id="closeDefectDropdownBtn">✓ 確定</button>
+                                        </div>
                                     </div>
                                     <div id="defectReasonOptions" class="checkbox-options-list">
                                         <div class="empty-state">資料載入中...</div>
