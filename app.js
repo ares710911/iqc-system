@@ -41,6 +41,15 @@ function navigateToSection(targetId) {
             activeSection.classList.remove('hidden');
             activeSection.classList.add('active');
         }
+        if (targetId === 'dashboardSection') {
+            const navSubItems = document.querySelectorAll('.nav-sub-item');
+            const navSubSubItems = document.querySelectorAll('.nav-sub-sub-item');
+            navSubItems.forEach(x => x.classList.remove('active'));
+            navSubSubItems.forEach(x => x.classList.remove('active'));
+            const mobileTitle = document.getElementById('mobileTitle');
+            if (mobileTitle) mobileTitle.textContent = "品質檢驗系統 - 首頁儀表板";
+            document.title = "品質檢驗系統";
+        }
     }
 }
 
@@ -86,6 +95,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 載入基礎資料 (人員、品項、不良原因、生產製令機型)
     loadBaseData(true);
+
+    // ==================== 首頁儀表板與 Logo 點擊事件 ====================
+    const sidebarHeader = document.getElementById('sidebarHeader');
+    if (sidebarHeader) {
+        sidebarHeader.addEventListener('click', () => {
+            navigateToSection('dashboardSection');
+        });
+    }
+
+    const tileCards = document.querySelectorAll('.tile-card');
+    tileCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const targetId = card.getAttribute('data-target');
+            if (targetId) {
+                navigateToSection(targetId);
+            }
+        });
+    });
+
+    // ==================== 不良原因複選下拉視窗事件 ====================
+    setupMultiSelectDefectReason();
 
     // ==================== 左側子母選單與 RWD 邏輯 ====================
     const sidebar = document.getElementById('sidebar');
@@ -341,6 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (defectiveCancelBtn) {
         defectiveCancelBtn.addEventListener('click', () => {
             defectiveForm.reset();
+            resetDefectReasonSelection();
             document.getElementById('defectiveRowIndex').value = '';
             document.getElementById('existingDefectPhotoUrl').value = '';
             document.getElementById('hiddenDefectPhotoBase64').value = '';
@@ -410,6 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (activeFormType === 'defective') {
             showToast('不良品檢驗紀錄上傳成功！');
             defectiveForm.reset();
+            resetDefectReasonSelection();
             
             // 恢復日期與照片預覽
             document.getElementById('defectiveUploadDate').value = new Date().toISOString().split('T')[0];
@@ -1096,15 +1128,23 @@ function loadBaseData(isSilent = false) {
             if (data.parts) globalPartsData = data.parts;
             if (data.models) globalModelsData = data.models;
 
-            // 填入不良原因選單
-            const defectReasonSelect = document.getElementById('defectReason');
-            if (defectReasonSelect && data.defectReasons) {
-                defectReasonSelect.innerHTML = '<option value="" disabled selected>請選擇不良原因</option>';
-                data.defectReasons.forEach(reason => {
-                    const option = document.createElement('option');
-                    option.value = reason;
-                    option.textContent = reason;
-                    defectReasonSelect.appendChild(option);
+            // 填入不良原因選單 (改為複選方塊選項)
+            const optionsContainer = document.getElementById('defectReasonOptions');
+            if (optionsContainer && data.defectReasons) {
+                optionsContainer.innerHTML = '';
+                data.defectReasons.forEach((reason) => {
+                    const label = document.createElement('label');
+                    label.className = 'checkbox-option';
+                    label.innerHTML = `
+                        <input type="checkbox" value="${reason}" data-reason="${reason}">
+                        <span>${reason}</span>
+                    `;
+                    optionsContainer.appendChild(label);
+                });
+                
+                const checkboxes = optionsContainer.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => {
+                    cb.addEventListener('change', updateDefectReasonSelectedState);
                 });
             }
             if (!isSilent) {
@@ -1454,11 +1494,12 @@ function editDefectiveRecord(record) {
     // 不良數量
     document.getElementById('defectQty').value = record.defectQty || '';
 
-    // 不良原因
-    setTimeout(() => {
-        const defectReasonSelect = document.getElementById('defectReason');
-        if (defectReasonSelect) defectReasonSelect.value = record.defectReason || '';
-    }, 100);
+    // 不良原因 (複選還原)
+    if (record.defectReason) {
+        setDefectReasonValues(record.defectReason);
+    } else {
+        resetDefectReasonSelection();
+    }
 
     // 退庫數量
     document.getElementById('return019').value = record.return019 || '0';
@@ -1483,4 +1524,91 @@ function editDefectiveRecord(record) {
     }
 
     showToast('已載入該筆資料至編輯表單');
+}
+
+// ==================== 複選不良原因元件邏輯函數 ====================
+
+function setupMultiSelectDefectReason() {
+    const trigger = document.getElementById('defectReasonTrigger');
+    const dropdown = document.getElementById('defectReasonDropdown');
+    const closeBtn = document.getElementById('closeDefectDropdownBtn');
+
+    if (!trigger || !dropdown) return;
+
+    // 點擊觸發框開關下拉清單
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = dropdown.classList.contains('hidden');
+        if (isHidden) {
+            dropdown.classList.remove('hidden');
+            trigger.classList.add('active');
+        } else {
+            dropdown.classList.add('hidden');
+            trigger.classList.remove('active');
+        }
+    });
+
+    // 確定按鈕點擊關閉
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.add('hidden');
+            trigger.classList.remove('active');
+        });
+    }
+
+    // 點擊點擊外部自動收合
+    document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target) && !trigger.contains(e.target)) {
+            dropdown.classList.add('hidden');
+            trigger.classList.remove('active');
+        }
+    });
+}
+
+function updateDefectReasonSelectedState() {
+    const optionsContainer = document.getElementById('defectReasonOptions');
+    const hiddenInput = document.getElementById('defectReason');
+    const displayText = document.getElementById('defectReasonText');
+
+    if (!optionsContainer || !hiddenInput || !displayText) return;
+
+    const checkedBoxes = optionsContainer.querySelectorAll('input[type="checkbox"]:checked');
+    const selectedValues = Array.from(checkedBoxes).map(cb => cb.value);
+
+    if (selectedValues.length === 0) {
+        hiddenInput.value = '';
+        displayText.innerHTML = '<span class="placeholder-text">請點擊選擇不良原因</span>';
+    } else {
+        hiddenInput.value = selectedValues.join(', ');
+        displayText.innerHTML = `
+            <div class="selected-tags-container">
+                ${selectedValues.map(v => `<span class="selected-tag">${v}</span>`).join('')}
+            </div>
+        `;
+    }
+}
+
+function setDefectReasonValues(valueString) {
+    const optionsContainer = document.getElementById('defectReasonOptions');
+    if (!optionsContainer) return;
+
+    // 清空現有勾選
+    const checkboxes = optionsContainer.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => { cb.checked = false; });
+
+    if (valueString) {
+        // 支援逗號或頓號分隔
+        const targetValues = valueString.split(/,\s*|、\s*/).map(s => s.trim());
+        checkboxes.forEach(cb => {
+            if (targetValues.includes(cb.value)) {
+                cb.checked = true;
+            }
+        });
+    }
+    updateDefectReasonSelectedState();
+}
+
+function resetDefectReasonSelection() {
+    setDefectReasonValues('');
 }

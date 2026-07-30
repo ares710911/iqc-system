@@ -25,7 +25,7 @@
     <div class="app-layout">
         <!-- 左側側邊欄 -->
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
+            <div class="sidebar-header" id="sidebarHeader" style="cursor: pointer;" title="點擊回到首頁儀表板">
                 <span class="logo-icon">📋</span>
                 <div class="logo-text">
                     <h2>品質檢驗系統</h2>
@@ -91,8 +91,88 @@
         <!-- 右側主工作區 -->
         <main class="main-content">
             
+            <!-- ==================== 0. 系統儀表板 (首頁方塊圖) ==================== -->
+            <section id="dashboardSection" class="content-section active">
+                <div class="dashboard-container">
+                    <div class="dashboard-header">
+                        <h1>品質檢驗系統</h1>
+                        <p>請選擇您要執行的作業功能項目</p>
+                    </div>
+
+                    <!-- 進料檢驗區塊 -->
+                    <div class="dashboard-group">
+                        <div class="dashboard-group-title">
+                            <span class="group-icon">📥</span>
+                            <span>進料檢驗 (IQC)</span>
+                        </div>
+                        <div class="dashboard-grid">
+                            <div class="tile-card" data-target="iqcFormSection">
+                                <div class="tile-icon-box bg-blue">📥</div>
+                                <div class="tile-content">
+                                    <h3>資料登錄</h3>
+                                    <p>進行進料檢驗紀錄登錄與照片上傳</p>
+                                </div>
+                                <div class="tile-action">進入登錄 ➔</div>
+                            </div>
+                            <div class="tile-card" data-target="iqcQueryDateSection">
+                                <div class="tile-icon-box bg-indigo">🔍</div>
+                                <div class="tile-content">
+                                    <h3>資訊查詢</h3>
+                                    <p>按日期、訂購單號或品號查詢進料紀錄</p>
+                                </div>
+                                <div class="tile-action">開始查詢 ➔</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 來料不良區塊 -->
+                    <div class="dashboard-group">
+                        <div class="dashboard-group-title">
+                            <span class="group-icon">⚠️</span>
+                            <span>來料不良 (Defective)</span>
+                        </div>
+                        <div class="dashboard-grid">
+                            <div class="tile-card" data-target="defectiveFormSection">
+                                <div class="tile-icon-box bg-amber">⚠️</div>
+                                <div class="tile-content">
+                                    <h3>不良登錄</h3>
+                                    <p>進行來料不良紀錄登錄與照片上傳</p>
+                                </div>
+                                <div class="tile-action">進入登錄 ➔</div>
+                            </div>
+                            <div class="tile-card" data-target="defectiveQuerySection">
+                                <div class="tile-icon-box bg-rose">🔍</div>
+                                <div class="tile-content">
+                                    <h3>資訊查詢</h3>
+                                    <p>依日期查詢不良紀錄與處置數量</p>
+                                </div>
+                                <div class="tile-action">開始查詢 ➔</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 系統設定區塊 -->
+                    <div class="dashboard-group">
+                        <div class="dashboard-group-title">
+                            <span class="group-icon">⚙️</span>
+                            <span>系統管理</span>
+                        </div>
+                        <div class="dashboard-grid">
+                            <div class="tile-card" data-target="systemSyncSection">
+                                <div class="tile-icon-box bg-purple">⚙️</div>
+                                <div class="tile-content">
+                                    <h3>生產製令 Model 同步</h3>
+                                    <p>從外部排程表同步最新 Model 對照資料</p>
+                                </div>
+                                <div class="tile-action">前往同步 ➔</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- ==================== 1. 進料檢驗 - 資料登錄 ==================== -->
-            <section id="iqcFormSection" class="content-section active">
+            <section id="iqcFormSection" class="content-section hidden">
                 <div class="form-container">
                     <form id="iqcForm" action="https://script.google.com/macros/s/AKfycbxjoY2yX5BsyojlCUcv8VV8xRhA_ZQEIoMs7CySMDX14MDTpBGVOj9UurjzmbRZohHm/exec" method="POST" target="hidden_iframe">
                         <!-- 隱藏欄位：壓縮後的 Base64 字串與編輯資訊 -->
@@ -379,11 +459,24 @@
                                 <input type="number" id="defectQty" name="defectQty" required min="1" placeholder="請輸入不良數量">
                             </div>
 
-                            <div class="form-group">
-                                <label for="defectReason">不良原因</label>
-                                <select id="defectReason" name="defectReason" required>
-                                    <option value="" disabled selected>資料載入中...</option>
-                                </select>
+                            <div class="form-group multi-select-group">
+                                <label for="defectReasonTrigger">不良原因 <span class="label-hint">(點擊可複選)</span></label>
+                                <input type="hidden" id="defectReason" name="defectReason" required>
+                                
+                                <div id="defectReasonTrigger" class="multi-select-trigger" tabindex="0">
+                                    <span id="defectReasonText" class="placeholder-text">請點擊選擇不良原因</span>
+                                    <span class="trigger-arrow">▼</span>
+                                </div>
+
+                                <div id="defectReasonDropdown" class="multi-select-dropdown hidden">
+                                    <div class="dropdown-header">
+                                        <span>選擇不良原因 (可複選)</span>
+                                        <button type="button" class="btn-close-dropdown" id="closeDefectDropdownBtn">✕ 確定</button>
+                                    </div>
+                                    <div id="defectReasonOptions" class="checkbox-options-list">
+                                        <div class="empty-state">資料載入中...</div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="form-row">
