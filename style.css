@@ -1131,6 +1131,13 @@ select {
     to { opacity: 1; }
 }
 
+/* 當不良原因下拉選單開啟時，大幅提升父層區塊 Stacking Context 避免被下方「附件上傳」區塊覆蓋 */
+.form-section:has(.multi-select-dropdown:not(.hidden)),
+.form-section.dropdown-open {
+    position: relative;
+    z-index: 500 !important;
+}
+
 .multi-select-dropdown {
     position: absolute;
     top: calc(100% + 6px);
@@ -1139,8 +1146,8 @@ select {
     background: #ffffff;
     border: 1px solid rgba(0, 0, 0, 0.15);
     border-radius: 12px;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-    z-index: 3000;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+    z-index: 3000 !important;
     overflow: hidden;
     animation: fadeInDown 0.2s ease;
 }

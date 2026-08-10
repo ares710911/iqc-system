@@ -1518,16 +1518,20 @@ function setupMultiSelectDefectReason() {
 
     if (!trigger || !dropdown) return;
 
+    const parentSection = trigger.closest('.form-section');
+
     function openDropdown() {
         dropdown.classList.remove('hidden');
         if (backdrop) backdrop.classList.remove('hidden');
         trigger.classList.add('active');
+        if (parentSection) parentSection.classList.add('dropdown-open');
     }
 
     function closeDropdown() {
         dropdown.classList.add('hidden');
         if (backdrop) backdrop.classList.add('hidden');
         trigger.classList.remove('active');
+        if (parentSection) parentSection.classList.remove('dropdown-open');
     }
 
     // 點擊觸發框開關下拉清單
