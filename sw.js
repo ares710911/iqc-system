@@ -1,4 +1,4 @@
-const CACHE_NAME = 'iqc-netlify-v27';
+const CACHE_NAME = 'iqc-netlify-v28';
 const urlsToCache = [
   './',
   './index.html',
@@ -40,6 +40,16 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+
+  // 絕對不要攔截 Google Apps Script API 或是 Drive 圖片等跨網域動態請求
+  const url = event.request.url;
+  if (url.includes('script.google.com') || 
+      url.includes('script.googleusercontent.com') || 
+      url.includes('googleusercontent.com') ||
+      url.includes('drive.google.com')) {
+    return; // 直接跳出，交給瀏覽器原生網絡請求處理
+  }
+
   event.respondWith(
     caches.match(event.request).then(response => {
       if (response) return response;

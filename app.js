@@ -96,6 +96,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // 載入基礎資料 (人員、品項、不良原因、生產製令機型)
     loadBaseData(true);
 
+    // 點擊/聚焦選單時自動二次檢視（若未載入完成則自動發起載入）
+    const iqcPersonnel = document.getElementById('iqcPersonnel');
+    if (iqcPersonnel) {
+        iqcPersonnel.addEventListener('focus', () => {
+            if (iqcPersonnel.options.length <= 1) loadBaseData(false);
+        });
+    }
+    const defectivePersonnel = document.getElementById('defectivePersonnel');
+    if (defectivePersonnel) {
+        defectivePersonnel.addEventListener('focus', () => {
+            if (defectivePersonnel.options.length <= 1) loadBaseData(false);
+        });
+    }
+
     // ==================== 首頁儀表板與 Logo 點擊事件 ====================
     const sidebarHeader = document.getElementById('sidebarHeader');
     if (sidebarHeader) {
@@ -1100,7 +1114,7 @@ function loadBaseData(isSilent = false, retryCount = 0) {
     if (!isSilent) {
         showToast('載入系統基礎資料中...', 'info');
     }
-    return fetch(SCRIPT_URL)
+    return fetch(SCRIPT_URL, { redirect: 'follow' })
         .then(response => {
             if (!response.ok) throw new Error(`HTTP 狀態碼錯誤: ${response.status}`);
             return response.json();
@@ -1166,12 +1180,27 @@ function loadBaseData(isSilent = false, retryCount = 0) {
         .catch(error => {
             console.error('無法載入基礎資料:', error);
             if (retryCount < 2) {
-                console.log(`即將於 1.5 秒後進行第 ${retryCount + 1} 次重試載入基礎資料...`);
+                console.log(`即將於 1 秒後進行第 ${retryCount + 1} 次重試載入基礎資料...`);
                 setTimeout(() => {
                     loadBaseData(isSilent, retryCount + 1);
-                }, 1500);
+                }, 1000);
             } else {
-                showToast('無法載入人員與選項資料，請重新整理頁面。', 'error');
+                showToast('無法載入人員與選項資料，請點擊選項重新嘗試。', 'error');
+                
+                // 提供點擊重新載入備用機制
+                const iqcPersonnel = document.getElementById('iqcPersonnel');
+                const defectivePersonnel = document.getElementById('defectivePersonnel');
+                const failOptHtml = '<option value="" disabled selected>⚠️ 點此重新嘗試載入資料</option>';
+                if (iqcPersonnel && iqcPersonnel.options.length <= 1) {
+                    iqcPersonnel.innerHTML = failOptHtml;
+                }
+                if (defectivePersonnel && defectivePersonnel.options.length <= 1) {
+                    defectivePersonnel.innerHTML = failOptHtml;
+                }
+                const optionsContainer = document.getElementById('defectReasonOptions');
+                if (optionsContainer && !optionsContainer.querySelector('input')) {
+                    optionsContainer.innerHTML = '<div class="empty-state" style="cursor:pointer; color: #ef4444; font-weight: 600;" onclick="loadBaseData(false)">⚠️ 資料載入失敗，點此重新載入</div>';
+                }
             }
         });
 }
