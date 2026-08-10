@@ -1,5 +1,5 @@
 // 系統 URL 常數
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyoz5eRmTpZwXLF0CqUtDrbAiuO-sYz5g-PPxmClf0u3bYCVtYEC1Cea0_BR5khIk4o/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxjoY2yX5BsyojlCUcv8VV8xRhA_ZQEIoMs7CySMDX14MDTpBGVOj9UurjzmbRZohHm/exec';
 
 // 將 Google Drive 檢視網址轉換為直連圖片網址
 function getDirectImageUrl(url) {
@@ -93,31 +93,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('iqcUploadDate').value = today;
     document.getElementById('defectiveUploadDate').value = today;
 
-    // 清除可能干擾 API 請求的舊版 Service Worker 註冊
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-            for (let reg of registrations) {
-                reg.unregister();
-            }
-        });
-    }
-
-    // 開啟畫面時立即向 Google 試算表發起最新資料同步 (包含 人員、PART、Model、不良原因 分頁)
-    loadBaseData(false);
-
-    // 點擊/聚焦選單時自動二次檢視（若未載入完成則自動發起載入）
-    const iqcPersonnel = document.getElementById('iqcPersonnel');
-    if (iqcPersonnel) {
-        iqcPersonnel.addEventListener('focus', () => {
-            if (iqcPersonnel.options.length <= 1) loadBaseData(false);
-        });
-    }
-    const defectivePersonnel = document.getElementById('defectivePersonnel');
-    if (defectivePersonnel) {
-        defectivePersonnel.addEventListener('focus', () => {
-            if (defectivePersonnel.options.length <= 1) loadBaseData(false);
-        });
-    }
+    // 載入基礎資料 (人員、品項、不良原因、生產製令機型)
+    loadBaseData(true);
 
     // ==================== 首頁儀表板與 Logo 點擊事件 ====================
     const sidebarHeader = document.getElementById('sidebarHeader');
