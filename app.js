@@ -1,5 +1,5 @@
 // 系統 URL 常數
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxjoY2yX5BsyojlCUcv8VV8xRhA_ZQEIoMs7CySMDX14MDTpBGVOj9UurjzmbRZohHm/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyoz5eRmTpZwXLF0CqUtDrbAiuO-sYz5g-PPxmClf0u3bYCVtYEC1Cea0_BR5khIk4o/exec';
 
 // 將 Google Drive 檢視網址轉換為直連圖片網址
 function getDirectImageUrl(url) {
@@ -1531,22 +1531,33 @@ function editDefectiveRecord(record) {
 function setupMultiSelectDefectReason() {
     const trigger = document.getElementById('defectReasonTrigger');
     const dropdown = document.getElementById('defectReasonDropdown');
+    const backdrop = document.getElementById('defectReasonBackdrop');
     const closeBtn = document.getElementById('closeDefectDropdownBtn');
     const selectAllBtn = document.getElementById('selectAllDefectBtn');
     const clearAllBtn = document.getElementById('clearAllDefectBtn');
 
     if (!trigger || !dropdown) return;
 
+    function openDropdown() {
+        dropdown.classList.remove('hidden');
+        if (backdrop) backdrop.classList.remove('hidden');
+        trigger.classList.add('active');
+    }
+
+    function closeDropdown() {
+        dropdown.classList.add('hidden');
+        if (backdrop) backdrop.classList.add('hidden');
+        trigger.classList.remove('active');
+    }
+
     // 點擊觸發框開關下拉清單
     trigger.addEventListener('click', (e) => {
         e.stopPropagation();
         const isHidden = dropdown.classList.contains('hidden');
         if (isHidden) {
-            dropdown.classList.remove('hidden');
-            trigger.classList.add('active');
+            openDropdown();
         } else {
-            dropdown.classList.add('hidden');
-            trigger.classList.remove('active');
+            closeDropdown();
         }
     });
 
@@ -1575,16 +1586,22 @@ function setupMultiSelectDefectReason() {
     if (closeBtn) {
         closeBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            dropdown.classList.add('hidden');
-            trigger.classList.remove('active');
+            closeDropdown();
+        });
+    }
+
+    // 點擊暗色背景遮罩關閉
+    if (backdrop) {
+        backdrop.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeDropdown();
         });
     }
 
     // 點擊外部自動收合
     document.addEventListener('click', (e) => {
         if (!dropdown.contains(e.target) && !trigger.contains(e.target)) {
-            dropdown.classList.add('hidden');
-            trigger.classList.remove('active');
+            closeDropdown();
         }
     });
 }
