@@ -1124,7 +1124,7 @@ function loadBaseData(isSilent = false) {
         showToast('正在與 Google 試算表同步資料中...', 'info');
     }
     const fetchUrl = `${SCRIPT_URL}?t=${new Date().getTime()}`;
-    return fetch(fetchUrl, { redirect: 'follow' })
+    return fetch(fetchUrl)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP 狀態碼 ${response.status}`);
