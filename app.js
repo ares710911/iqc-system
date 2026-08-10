@@ -93,12 +93,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('iqcUploadDate').value = today;
     document.getElementById('defectiveUploadDate').value = today;
 
-    // 預先同步渲染預設人員與不良原因選單 (零延遲、無需等待網絡回應即刻展現)
-    renderPersonnelOptions(DEFAULT_PERSONNEL);
-    renderDefectReasonOptions(defaultDefectReasons);
+    // 清除可能干擾 API 請求的舊版 Service Worker 註冊
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (let reg of registrations) {
+                reg.unregister();
+            }
+        });
+    }
 
-    // 靜默發起後端資料庫同步 (包含 品項與 Model 庫)
-    loadBaseData(true);
+    // 開啟畫面時立即向 Google 試算表發起最新資料同步 (包含 人員、PART、Model、不良原因 分頁)
+    loadBaseData(false);
 
     // 點擊/聚焦選單時自動二次檢視（若未載入完成則自動發起載入）
     const iqcPersonnel = document.getElementById('iqcPersonnel');
@@ -1113,36 +1118,45 @@ function showToast(message, type = 'success') {
     }
 }
 
-// 載入與重新整理基礎資料 (人員、品項、不良原因、生產製令機型)
-function loadBaseData(isSilent = true) {
-    return fetch(SCRIPT_URL, { redirect: 'follow' })
+// 載入與重新整理基礎資料 (從 Google 試算表動態同步 人員、品項、不良原因、生產製令機型)
+function loadBaseData(isSilent = false) {
+    if (!isSilent) {
+        showToast('正在與 Google 試算表同步資料中...', 'info');
+    }
+    const fetchUrl = `${SCRIPT_URL}?t=${new Date().getTime()}`;
+    return fetch(fetchUrl, { redirect: 'follow' })
         .then(response => {
-            if (!response.ok) throw new Error(`HTTP 狀態碼錯誤: ${response.status}`);
+            if (!response.ok) {
+                throw new Error(`HTTP 狀態碼 ${response.status}`);
+            }
             return response.json();
         })
         .then(data => {
-            console.log("基礎資料後端同步成功", data);
+            console.log("從 Google 試算表成功同步資料:", data);
             
-            // 更新人員選單
+            // 1. 動態同步「人員」選單 (從試算表「人員」分頁 A2:A 欄)
             if (data.personnel && Array.isArray(data.personnel) && data.personnel.length > 0) {
                 renderPersonnelOptions(data.personnel);
             }
             
-            // 儲存 PART 與 Model 資料
+            // 2. 動態同步「PART」與「Model」試算表資料庫
             if (data.parts) globalPartsData = data.parts;
             if (data.models) globalModelsData = data.models;
 
-            // 更新不良原因選單
+            // 3. 動態同步「不良原因」選單 (從試算表「不良原因」分頁 A2:A 欄)
             if (data.defectReasons && Array.isArray(data.defectReasons) && data.defectReasons.length > 0) {
                 renderDefectReasonOptions(data.defectReasons);
+            } else {
+                renderDefectReasonOptions(DEFAULT_DEFECT_REASONS);
             }
 
             if (!isSilent) {
-                showToast('系統資料更新完成');
+                showToast('已成功從 Google 試算表同步最新資料！', 'success');
             }
         })
         .catch(error => {
-            console.warn('後端基礎資料靜默同步提醒 (使用內建備用選項庫):', error);
+            console.error('無法從 Google 試算表同步資料:', error);
+            showToast('同步試算表失敗：' + error.message, 'error');
         });
 }
 
