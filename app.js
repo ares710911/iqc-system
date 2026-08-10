@@ -93,10 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('iqcUploadDate').value = today;
     document.getElementById('defectiveUploadDate').value = today;
 
-    // 預先渲染預設不良原因選單 (無需等待 API 回傳即有選項)
+    // 預先同步渲染預設人員與不良原因選單 (零延遲、無需等待網絡回應即刻展現)
+    renderPersonnelOptions(DEFAULT_PERSONNEL);
     renderDefectReasonOptions(defaultDefectReasons);
 
-    // 載入基礎資料 (人員、品項、不良原因、生產製令機型)
+    // 靜默發起後端資料庫同步 (包含 品項與 Model 庫)
     loadBaseData(true);
 
     // 點擊/聚焦選單時自動二次檢視（若未載入完成則自動發起載入）
@@ -1113,85 +1114,35 @@ function showToast(message, type = 'success') {
 }
 
 // 載入與重新整理基礎資料 (人員、品項、不良原因、生產製令機型)
-function loadBaseData(isSilent = false, retryCount = 0) {
-    if (!isSilent) {
-        showToast('載入系統基礎資料中...', 'info');
-    }
+function loadBaseData(isSilent = true) {
     return fetch(SCRIPT_URL, { redirect: 'follow' })
         .then(response => {
             if (!response.ok) throw new Error(`HTTP 狀態碼錯誤: ${response.status}`);
             return response.json();
         })
         .then(data => {
-            console.log("基礎資料載入成功", data);
+            console.log("基礎資料後端同步成功", data);
             
-            // 填入進料與不良人員選單
-            const iqcPersonnel = document.getElementById('iqcPersonnel');
-            const defectivePersonnel = document.getElementById('defectivePersonnel');
-            
-            const currentIqcVal = iqcPersonnel ? iqcPersonnel.value : '';
-            const currentDefVal = defectivePersonnel ? defectivePersonnel.value : '';
-
-            const defaultOptHtml = '<option value="" disabled selected>請選擇檢驗人員</option>';
-            if (iqcPersonnel) iqcPersonnel.innerHTML = defaultOptHtml;
-            if (defectivePersonnel) defectivePersonnel.innerHTML = defaultOptHtml;
-            
-            if (data.personnel && Array.isArray(data.personnel)) {
-                data.personnel.forEach(person => {
-                    if (iqcPersonnel) {
-                        const opt1 = document.createElement('option');
-                        opt1.value = person; opt1.textContent = person;
-                        iqcPersonnel.appendChild(opt1);
-                    }
-                    if (defectivePersonnel) {
-                        const opt2 = document.createElement('option');
-                        opt2.value = person; opt2.textContent = person;
-                        defectivePersonnel.appendChild(opt2);
-                    }
-                });
-                if (currentIqcVal) iqcPersonnel.value = currentIqcVal;
-                if (currentDefVal) defectivePersonnel.value = currentDefVal;
+            // 更新人員選單
+            if (data.personnel && Array.isArray(data.personnel) && data.personnel.length > 0) {
+                renderPersonnelOptions(data.personnel);
             }
             
             // 儲存 PART 與 Model 資料
             if (data.parts) globalPartsData = data.parts;
             if (data.models) globalModelsData = data.models;
 
-            // 填入不良原因選單 (若後端未傳回則採用預設常規不良原因清單)
-            const reasonsToRender = (data && data.defectReasons && Array.isArray(data.defectReasons) && data.defectReasons.length > 0)
-                ? data.defectReasons
-                : defaultDefectReasons;
-            renderDefectReasonOptions(reasonsToRender);
+            // 更新不良原因選單
+            if (data.defectReasons && Array.isArray(data.defectReasons) && data.defectReasons.length > 0) {
+                renderDefectReasonOptions(data.defectReasons);
+            }
 
             if (!isSilent) {
-                showToast('系統資料載入完成');
+                showToast('系統資料更新完成');
             }
         })
         .catch(error => {
-            console.error('無法載入基礎資料:', error);
-            if (retryCount < 2) {
-                console.log(`即將於 1 秒後進行第 ${retryCount + 1} 次重試載入基礎資料...`);
-                setTimeout(() => {
-                    loadBaseData(isSilent, retryCount + 1);
-                }, 1000);
-            } else {
-                showToast('無法載入人員與選項資料，請點擊選項重新嘗試。', 'error');
-                
-                // 提供點擊重新載入備用機制
-                const iqcPersonnel = document.getElementById('iqcPersonnel');
-                const defectivePersonnel = document.getElementById('defectivePersonnel');
-                const failOptHtml = '<option value="" disabled selected>⚠️ 點此重新嘗試載入資料</option>';
-                if (iqcPersonnel && iqcPersonnel.options.length <= 1) {
-                    iqcPersonnel.innerHTML = failOptHtml;
-                }
-                if (defectivePersonnel && defectivePersonnel.options.length <= 1) {
-                    defectivePersonnel.innerHTML = failOptHtml;
-                }
-                const optionsContainer = document.getElementById('defectReasonOptions');
-                if (optionsContainer && !optionsContainer.querySelector('input')) {
-                    optionsContainer.innerHTML = '<div class="empty-state" style="cursor:pointer; color: #ef4444; font-weight: 600;" onclick="loadBaseData(false)">⚠️ 資料載入失敗，點此重新載入</div>';
-                }
-            }
+            console.warn('後端基礎資料靜默同步提醒 (使用內建備用選項庫):', error);
         });
 }
 
@@ -1724,4 +1675,36 @@ function renderDefectReasonOptions(reasonsList = defaultDefectReasons) {
     });
 
     updateDefectReasonSelectedState();
+}
+
+// 預設人員常規清單 (做為零時差預載/離線備援選項)
+const DEFAULT_PERSONNEL = ["高素娟", "李雅萍", "蔣邦昱", "黃漢彬"];
+
+function renderPersonnelOptions(personnelList = DEFAULT_PERSONNEL) {
+    const iqcPersonnel = document.getElementById('iqcPersonnel');
+    const defectivePersonnel = document.getElementById('defectivePersonnel');
+
+    const currentIqcVal = iqcPersonnel ? iqcPersonnel.value : '';
+    const currentDefVal = defectivePersonnel ? defectivePersonnel.value : '';
+
+    const defaultOptHtml = '<option value="" disabled selected>請選擇檢驗人員</option>';
+    if (iqcPersonnel) iqcPersonnel.innerHTML = defaultOptHtml;
+    if (defectivePersonnel) defectivePersonnel.innerHTML = defaultOptHtml;
+
+    if (Array.isArray(personnelList)) {
+        personnelList.forEach(person => {
+            if (iqcPersonnel) {
+                const opt1 = document.createElement('option');
+                opt1.value = person; opt1.textContent = person;
+                iqcPersonnel.appendChild(opt1);
+            }
+            if (defectivePersonnel) {
+                const opt2 = document.createElement('option');
+                opt2.value = person; opt2.textContent = person;
+                defectivePersonnel.appendChild(opt2);
+            }
+        });
+        if (currentIqcVal) iqcPersonnel.value = currentIqcVal;
+        if (currentDefVal) defectivePersonnel.value = currentDefVal;
+    }
 }
