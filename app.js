@@ -93,6 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('iqcUploadDate').value = today;
     document.getElementById('defectiveUploadDate').value = today;
 
+    // 預先渲染預設不良原因選單 (無需等待 API 回傳即有選項)
+    renderDefectReasonOptions(defaultDefectReasons);
+
     // 載入基礎資料 (人員、品項、不良原因、生產製令機型)
     loadBaseData(true);
 
@@ -1154,25 +1157,12 @@ function loadBaseData(isSilent = false, retryCount = 0) {
             if (data.parts) globalPartsData = data.parts;
             if (data.models) globalModelsData = data.models;
 
-            // 填入不良原因選單 (改為複選方塊選項)
-            const optionsContainer = document.getElementById('defectReasonOptions');
-            if (optionsContainer && data.defectReasons && Array.isArray(data.defectReasons)) {
-                optionsContainer.innerHTML = '';
-                data.defectReasons.forEach((reason) => {
-                    const label = document.createElement('label');
-                    label.className = 'checkbox-option';
-                    label.innerHTML = `
-                        <input type="checkbox" value="${reason}" data-reason="${reason}">
-                        <span>${reason}</span>
-                    `;
-                    optionsContainer.appendChild(label);
-                });
-                
-                const checkboxes = optionsContainer.querySelectorAll('input[type="checkbox"]');
-                checkboxes.forEach(cb => {
-                    cb.addEventListener('change', updateDefectReasonSelectedState);
-                });
-            }
+            // 填入不良原因選單 (若後端未傳回則採用預設常規不良原因清單)
+            const reasonsToRender = (data && data.defectReasons && Array.isArray(data.defectReasons) && data.defectReasons.length > 0)
+                ? data.defectReasons
+                : defaultDefectReasons;
+            renderDefectReasonOptions(reasonsToRender);
+
             if (!isSilent) {
                 showToast('系統資料載入完成');
             }
@@ -1699,4 +1689,39 @@ function setDefectReasonValues(valueString) {
 
 function resetDefectReasonSelection() {
     setDefectReasonValues('');
+}
+
+// 預設不良原因常規清單 (做為後端傳回前的預先載入/備用備援選項)
+const defaultDefectReasons = [
+    "外觀不良", "尺寸偏差", "標示/標籤錯誤", "包裝破損",
+    "零件缺件", "氧化/生銹", "刮傷/碰傷", "變形/歪斜",
+    "功能不良", "材質不符", "污損/雜質", "其它"
+];
+
+function renderDefectReasonOptions(reasonsList = defaultDefectReasons) {
+    const optionsContainer = document.getElementById('defectReasonOptions');
+    if (!optionsContainer) return;
+
+    // 暫存目前已勾選內容
+    const checkedBoxes = optionsContainer.querySelectorAll('input[type="checkbox"]:checked');
+    const currentlyChecked = Array.from(checkedBoxes).map(cb => cb.value);
+
+    optionsContainer.innerHTML = '';
+    reasonsList.forEach((reason) => {
+        const label = document.createElement('label');
+        label.className = 'checkbox-option';
+        const isChecked = currentlyChecked.includes(reason);
+        label.innerHTML = `
+            <input type="checkbox" value="${reason}" data-reason="${reason}" ${isChecked ? 'checked' : ''}>
+            <span>${reason}</span>
+        `;
+        optionsContainer.appendChild(label);
+    });
+
+    const checkboxes = optionsContainer.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateDefectReasonSelectedState);
+    });
+
+    updateDefectReasonSelectedState();
 }
