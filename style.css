@@ -1246,7 +1246,7 @@ select {
 
 /* 手機版優先強覆蓋模式 (Modal / Popover overlay) */
 @media (max-width: 768px) {
-    .multi-select-dropdown {
+    .multi-select-dropdown:not(.hidden) {
         position: fixed !important;
         top: 50% !important;
         left: 50% !important;
