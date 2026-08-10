@@ -395,6 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activeFormType === 'iqc') {
             showToast('進料檢驗紀錄上傳成功！');
             const currentPo = document.getElementById('poNumber').value;
+            const currentPersonnel = document.getElementById('iqcPersonnel').value;
             
             // 暫存訂購單照片相關欄位，以在上傳後能保留
             const savedPoPhotoPreview = document.getElementById('poPhotoPreview').innerHTML;
@@ -403,7 +404,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             iqcForm.reset();
             
-            // 恢復訂購單號、日期、照片預覽與暫存欄位
+            // 恢復訂購單號、人員、日期、照片預覽與暫存欄位
+            if (currentPersonnel) document.getElementById('iqcPersonnel').value = currentPersonnel;
             document.getElementById('poNumber').value = currentPo;
             document.getElementById('iqcUploadDate').value = new Date().toISOString().split('T')[0];
             document.getElementById('poPhotoPreview').innerHTML = savedPoPhotoPreview;
@@ -440,10 +442,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } else if (activeFormType === 'defective') {
             showToast('不良品檢驗紀錄上傳成功！');
+            const currentPersonnel = document.getElementById('defectivePersonnel').value;
             defectiveForm.reset();
             resetDefectReasonSelection();
             
-            // 恢復日期與照片預覽
+            // 恢復人員、日期與照片預覽
+            if (currentPersonnel) document.getElementById('defectivePersonnel').value = currentPersonnel;
             document.getElementById('defectiveUploadDate').value = new Date().toISOString().split('T')[0];
             document.getElementById('defectPhotoPreview').innerHTML = '';
             document.getElementById('existingDefectPhotoUrl').value = '';
@@ -1092,12 +1096,15 @@ function showToast(message, type = 'success') {
 }
 
 // 載入與重新整理基礎資料 (人員、品項、不良原因、生產製令機型)
-function loadBaseData(isSilent = false) {
+function loadBaseData(isSilent = false, retryCount = 0) {
     if (!isSilent) {
         showToast('載入系統基礎資料中...', 'info');
     }
     return fetch(SCRIPT_URL)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP 狀態碼錯誤: ${response.status}`);
+            return response.json();
+        })
         .then(data => {
             console.log("基礎資料載入成功", data);
             
@@ -1105,11 +1112,14 @@ function loadBaseData(isSilent = false) {
             const iqcPersonnel = document.getElementById('iqcPersonnel');
             const defectivePersonnel = document.getElementById('defectivePersonnel');
             
+            const currentIqcVal = iqcPersonnel ? iqcPersonnel.value : '';
+            const currentDefVal = defectivePersonnel ? defectivePersonnel.value : '';
+
             const defaultOptHtml = '<option value="" disabled selected>請選擇檢驗人員</option>';
             if (iqcPersonnel) iqcPersonnel.innerHTML = defaultOptHtml;
             if (defectivePersonnel) defectivePersonnel.innerHTML = defaultOptHtml;
             
-            if (data.personnel) {
+            if (data.personnel && Array.isArray(data.personnel)) {
                 data.personnel.forEach(person => {
                     if (iqcPersonnel) {
                         const opt1 = document.createElement('option');
@@ -1122,6 +1132,8 @@ function loadBaseData(isSilent = false) {
                         defectivePersonnel.appendChild(opt2);
                     }
                 });
+                if (currentIqcVal) iqcPersonnel.value = currentIqcVal;
+                if (currentDefVal) defectivePersonnel.value = currentDefVal;
             }
             
             // 儲存 PART 與 Model 資料
@@ -1130,7 +1142,7 @@ function loadBaseData(isSilent = false) {
 
             // 填入不良原因選單 (改為複選方塊選項)
             const optionsContainer = document.getElementById('defectReasonOptions');
-            if (optionsContainer && data.defectReasons) {
+            if (optionsContainer && data.defectReasons && Array.isArray(data.defectReasons)) {
                 optionsContainer.innerHTML = '';
                 data.defectReasons.forEach((reason) => {
                     const label = document.createElement('label');
@@ -1153,7 +1165,14 @@ function loadBaseData(isSilent = false) {
         })
         .catch(error => {
             console.error('無法載入基礎資料:', error);
-            showToast('無法載入人員與選項資料，請重新整理頁面。', 'error');
+            if (retryCount < 2) {
+                console.log(`即將於 1.5 秒後進行第 ${retryCount + 1} 次重試載入基礎資料...`);
+                setTimeout(() => {
+                    loadBaseData(isSilent, retryCount + 1);
+                }, 1500);
+            } else {
+                showToast('無法載入人員與選項資料，請重新整理頁面。', 'error');
+            }
         });
 }
 
